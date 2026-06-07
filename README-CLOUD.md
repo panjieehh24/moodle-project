@@ -49,9 +49,6 @@ cd moodle-web
 
 ## Phase 1 — Database (Clever Cloud MySQL)
 
-> **Why Clever Cloud?** PlanetScale removed its free tier in 2024 — `pscale database create`
-> now fails with "Cluster size is required". Clever Cloud's DEV plan is real MySQL,
-> so no query code needs to change, only the connection string.
 
 1. Log in to [console.clever-cloud.com](https://console.clever-cloud.com)
 2. **Add-ons** → **Create an add-on** → **MySQL** → **DEV** (free)
@@ -65,16 +62,10 @@ cd moodle-web
 $env:DATABASE_URL = "mysql://user:pass@host:port/dbname"
 node deploy/import-db.js
 ```
-
-> **SSL note:** Clever Cloud DEV uses a self-signed certificate chain.
-> The backend connects with `ssl: { rejectUnauthorized: false }`.
-> The connection is still encrypted — only the chain verification is skipped.
-
 ---
 
 ## Phase 2 — Azure Resource Group & Provider Registration
 
-> **Important:** A brand-new Azure subscription has no resource providers registered.
 > All five `az provider register` commands below are required or resource creation will fail.
 
 ```powershell
@@ -87,8 +78,6 @@ az provider register --namespace Microsoft.OperationalInsights
 az provider register --namespace Microsoft.Web
 az provider register --namespace Microsoft.ContainerRegistry
 ```
-
-Wait ~1–2 minutes for providers to finish registering before proceeding.
 
 ---
 
@@ -105,8 +94,6 @@ Replace `<your-acr-name>` with a globally unique name (e.g. `moodlewebacr`).
 
 ## Phase 4 — Backend → Azure Container Apps
 
-> **Do not use `az containerapp up --source`** — it has a CLI bug
-> (`NoneType object has no attribute 'linux'`). Use the explicit 3-step flow below.
 
 ### Step 4a — Build the image in ACR (no local Docker required)
 
