@@ -97,7 +97,7 @@ All accounts use password: **`password123`**
 ---
 
 
-## 7. Project structure
+## 6. Project structure
 
 ```
 moodle-web/
@@ -126,26 +126,4 @@ moodle-web/
         └── auth.js          # Token helpers + shell init
 ```
 
----
-
-## 8. API reference (quick)
-
-All routes are prefixed `/api/v1/`. Protected routes require `Authorization: Bearer <token>`.
-
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| POST | /auth/login | — | Login, returns JWT |
-| GET | /auth/me | ✓ | Current user profile |
-| GET | /courses | ✓ | My courses |
-| GET | /courses/:id | ✓ | Course detail |
-| GET | /assignments | ✓ | My assignments (sorted by due_at) |
-| GET | /assignments/:id | ✓ | Assignment detail |
-| POST | /assignments/:id/submit | student | Upload submission file |
-| PATCH | /assignments/:aId/submissions/:sId/grade | lecturer | Grade a submission |
-| GET | /notifications | ✓ | All notifications |
-| GET | /notifications/unread-count | student | Unread badge count |
-| POST | /notifications | lecturer | Post announcement |
-| PATCH | /notifications/:id/read | ✓ | Mark as read |
-
----
 
