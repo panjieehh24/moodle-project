@@ -1,7 +1,4 @@
--- =============================================================================
---  Moodle Web — Database Schema  (25 tables)
---  All timestamps UTC.  UUID primary keys throughout.
--- =============================================================================
+
 
 CREATE DATABASE IF NOT EXISTS moodle_web
   CHARACTER SET utf8mb4
