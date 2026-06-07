@@ -1,17 +1,4 @@
-# ============================================================
-#  moodle-web  ->  Azure Free Tier   ·   Deployment runbook
-#
-#  Records the exact steps used to migrate moodle-web to the cloud.
-#    Database : Clever Cloud MySQL (free DEV plan)
-#    Backend  : Azure Container Apps
-#    Frontend : Azure Static Web Apps
-#    Uploads  : Azure Blob Storage
-#
-#  Prerequisites:
-#    - az CLI + Node.js installed; `az login` done
-#    - `. .\deploy\secrets.local.ps1` sourced into the session
-#  Run section by section, not all at once.
-# ============================================================
+
 
 $RG  = "moodle-web-rg"
 $LOC = "southeastasia"
@@ -61,13 +48,3 @@ az staticwebapp create --name moodle-web-frontend --resource-group $RG `
 # --- 8. CORS: allow the frontend origin ----------------------
 az containerapp update --name moodle-backend --resource-group $RG `
   --set-env-vars "FRONTEND_URL=https://yellow-sky-03a480100.7.azurestaticapps.net"
-
-# ============================================================
-#  Live URLs
-#    Frontend : https://yellow-sky-03a480100.7.azurestaticapps.net
-#    Backend  : https://moodle-backend.politecoast-e22ef216.southeastasia.azurecontainerapps.io
-#
-#  Tear everything down after the presentation:
-#    az group delete --name moodle-web-rg --yes --no-wait
-#  (also delete the MySQL add-on in the Clever Cloud console)
-# ============================================================
