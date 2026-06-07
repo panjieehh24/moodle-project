@@ -1,7 +1,4 @@
-# Moodle Web — Cloud Deployment Guide (Local → Azure)
-
-> Cloud Computing course project · UGM 2026  
-> Supervisor: Dr. Lukman Heryawan, S.T., M.T.
+# Moodle Web — Cloud Deployment Guide (Local to Azure)
 
 > For local/Docker deployment, see [README.md](README.md).
 
@@ -206,23 +203,6 @@ Frontend updates deploy automatically on every `git push` to `main`.
 
 ---
 
-## Cold Start & Keep-Warm
-
-With `--min-replicas 0` the container scales to zero when idle.  
-The first request after ~10 min will cold-start in ~10–15 seconds.
-
-To keep one replica always running (eliminates cold starts, uses free credit faster):
-
-```powershell
-az containerapp update `
-  --name moodle-backend `
-  --resource-group moodle-web-rg `
-  --min-replicas 1 --max-replicas 2
-```
-
-Revert to scale-to-zero: `--min-replicas 0`.
-
----
 
 ## Demo Accounts
 
@@ -236,37 +216,3 @@ All accounts use password: **`password123`**
 
 ---
 
-## Cost & Teardown
-
-- **Clever Cloud DEV MySQL** — free
-- **Azure Static Web Apps** — free tier
-- **Azure Container Apps** — free when idle (scale-to-zero), ~$0.17/day for Container Registry
-- **Azure Blob Storage** — near-zero for small files
-
-Teardown everything:
-
-```powershell
-az group delete --name moodle-web-rg --yes --no-wait
-```
-
-Then delete the MySQL add-on in the Clever Cloud console.
-
----
-
-## Troubleshooting
-
-**`az containerapp up --source` fails with NoneType error**  
-Use the explicit ACR build + containerapp create flow in Phase 4 instead.
-
-**Provider registration errors on first deploy**  
-Run all five `az provider register` commands in Phase 2 and wait 1–2 minutes.
-
-**Database connection fails with SSL handshake error**  
-Ensure `ssl: { rejectUnauthorized: false }` is set in `backend/db/connection.js`.
-
-**`CREATE DATABASE` fails during import**  
-Clever Cloud DEV pre-creates the database. Run `deploy/import-db.js` — it strips
-those statements automatically before importing.
-
-**Frontend shows "API unreachable"**  
-Confirm the backend URL in `frontend/js/api.js` matches the Container Apps ingress URL exactly.
