@@ -1,9 +1,6 @@
 USE moodle_web;
 
--- ============================================================
---  USERS
---  password for all accounts: password123
--- ============================================================
+
 INSERT INTO users (id, name, email, password, role) VALUES
   ('00000000-0000-0000-0000-000000000001', 'Dr. Lukman Heryawan',   'lukman@ugm.ac.id',  '$2a$10$UCsDY/OUDO5aGoqhlA/Pp.9R02hDnBsZYpZtuJl5xkC.kxDebCAvG', 'lecturer'),
   ('00000000-0000-0000-0000-000000000002', 'Adam Rizky',             'adam@mail.ugm.ac.id',   '$2a$10$UCsDY/OUDO5aGoqhlA/Pp.9R02hDnBsZYpZtuJl5xkC.kxDebCAvG', 'student'),
