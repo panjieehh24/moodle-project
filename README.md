@@ -105,14 +105,14 @@ moodle-web/
 ├── nginx.conf               # Nginx: serve frontend + proxy /api to backend
 ├── .env                     # Environment variables
 ├── database/
-│   ├── init.sql             # Schema (6 tables)
+│   ├── init.sql             # Schema 
 │   └── seed.sql             # Demo data
 ├── backend/
 │   ├── Dockerfile
 │   ├── server.js            # Express entry point
 │   ├── routes/              # auth · courses · assignments · notifications
 │   ├── controllers/         # Business logic per domain
-│   ├── middleware/          # JWT auth · error handler
+│   ├── middleware/          # JWT auth 
 │   └── db/connection.js     # mysql2 pool
 └── frontend/
     ├── index.html           # Login
