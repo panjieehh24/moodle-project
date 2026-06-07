@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Courses — UGM Learn</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg></div>
+      <span class="brand-name">UGM Learn</span>
+    </div>
+    <nav></nav>
+    <div class="sidebar-footer">
+      <button class="logout-btn" onclick="logout()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> Sign out</button>
+    </div>
+  </aside>
+  <div class="main-wrap">
+    <header class="topbar">
+      <span class="page-title">Courses</span>
+      <div class="topbar-right">
+        <button class="bell-btn" onclick="location.href='notifications.html'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg><span class="bell-badge" id="bell-badge"></span></button>
+        <div class="user-chip">
+          <div class="user-avatar" id="user-avatar">?</div>
+          <div class="user-info"><strong id="user-name"></strong><span id="user-role"></span></div>
+        </div>
+      </div>
+    </header>
+    <main class="content">
+      <div class="masthead">
+        <span class="kicker">Genap 2025 / 2026</span>
+        <h1 id="courses-title">My courses</h1>
+        <p class="lede" id="courses-sub">Everything you're enrolled in this term.</p>
+        <hr class="rule">
+      </div>
+
+      <div class="toolbar">
+        <div class="search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input id="course-search" type="text" placeholder="Search courses by name or code…">
+        </div>
+      </div>
+
+      <div id="course-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:1.25rem">
+        <em style="color:var(--muted)">Loading…</em>
+      </div>
+    </main>
+  </div>
+</div>
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script>
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let ALL = [], ROLE = 'student';
+
+(async () => {
+  const user = await initShell();
+  if (!user) return;
+  ROLE = user.role;
+  if (user.name) document.getElementById("user-avatar").textContent = user.name.charAt(0).toUpperCase();
+  if (user.role !== 'student') {
+    document.getElementById("courses-title").textContent = "Courses I teach";
+    document.getElementById("courses-sub").textContent = "Manage your classrooms, materials and grading.";
+  }
+
+  ALL = await api.courses.list();
+  render(ALL);
+
+  document.getElementById("course-search").addEventListener("input", e => {
+    const q = e.target.value.trim().toLowerCase();
+    render(ALL.filter(c => (c.title + ' ' + (c.code||'')).toLowerCase().includes(q)));
+  });
+})();
+
+function render(courses) {
+  const grid = document.getElementById("course-grid");
+  if (courses.length === 0) {
+    grid.innerHTML = `<div class="empty" style="grid-column:1/-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg><p>No courses match your search.</p></div>`;
+    return;
+  }
+  grid.innerHTML = courses.map((c, i) => {
+    const spine = (i % 6) + 1;
+    const initial = (c.lecturer_name || '?').charAt(0).toUpperCase();
+    const foot = ROLE === 'lecturer'
+      ? `<span class="badge badge-info">${c.student_count} students</span><span style="margin-left:auto">${c.credits||3} credits</span>`
+      : `<div class="avatar-xs">${initial}</div><span>${esc(c.lecturer_name||'')}</span><span style="margin-left:auto">${c.credits||3} credits</span>`;
+    return `<article class="course-tile" onclick="location.href='course-detail.html?id=${c.id}'">
+      <div class="course-spine spine-${spine}"></div>
+      <div class="course-tile-body">
+        <div class="course-code">${esc(c.code || 'Course')}</div>
+        <h3>${esc(c.title)}</h3>
+        <p class="desc">${esc(c.description || 'No description available.')}</p>
+        <div class="foot">${foot}</div>
+      </div>
+    </article>`;
+  }).join("");
+}
+</script>
+</body>
+</html>

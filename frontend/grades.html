@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Grades — UGM Learn</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg></div>
+      <span class="brand-name">UGM Learn</span>
+    </div>
+    <nav></nav>
+    <div class="sidebar-footer">
+      <button class="logout-btn" onclick="logout()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> Sign out</button>
+    </div>
+  </aside>
+  <div class="main-wrap">
+    <header class="topbar">
+      <span class="page-title">Grades</span>
+      <div class="topbar-right">
+        <button class="bell-btn" onclick="location.href='notifications.html'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg><span class="bell-badge" id="bell-badge"></span></button>
+        <div class="user-chip">
+          <div class="user-avatar" id="user-avatar">?</div>
+          <div class="user-info"><strong id="user-name"></strong><span id="user-role"></span></div>
+        </div>
+      </div>
+    </header>
+    <main class="content">
+      <div class="masthead">
+        <span class="kicker">Genap 2025 / 2026</span>
+        <h1>Grade book</h1>
+        <p class="lede">Weighted standing per course and your individual assignment scores.</p>
+        <hr class="rule">
+      </div>
+      <div id="grades-summary" style="margin-bottom:1.75rem"></div>
+      <div id="grades-root"><em style="color:var(--muted)">Loading…</em></div>
+    </main>
+  </div>
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script>
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function gradeColor(pct) {
+  if (pct >= 80) return { badge: "badge-success", txt: "var(--emerald)" };
+  if (pct >= 60) return { badge: "badge-info",    txt: "var(--sky)" };
+  if (pct >= 40) return { badge: "badge-warning", txt: "var(--amber)" };
+  return { badge: "badge-danger", txt: "var(--rose)" };
+}
+
+(async () => {
+  const user = await initShell();
+  if (!user) return;
+  if (user.name) document.getElementById("user-avatar").textContent = user.name.charAt(0).toUpperCase();
+
+  const root = document.getElementById("grades-root");
+  const { components, assignments } = await api.grades.mine();
+
+  if (components.length === 0 && assignments.length === 0) {
+    root.innerHTML = "<div class='card'><div class='card-body'><em style='color:var(--muted)'>No grades recorded yet.</em></div></div>";
+    return;
+  }
+
+  const courses = {};
+  components.forEach(r => {
+    const k = r.course_id;
+    if (!courses[k]) courses[k] = { title: r.course_title, code: r.course_code, rows: [] };
+    courses[k].rows.push(r);
+  });
+
+  const courseScores = [];
+  let html = "";
+  for (const c of Object.values(courses)) {
+    let weighted = 0, gradedWeight = 0;
+    const rowsHtml = c.rows.map(r => {
+      const has = r.score !== null && r.score !== undefined;
+      const pct = has ? (r.score / r.max_score) * 100 : null;
+      if (has) { weighted += Number(r.weight) * (r.score / r.max_score); gradedWeight += Number(r.weight); }
+      const col = has ? gradeColor(pct) : null;
+      return `<tr>
+        <td style="font-weight:600;color:var(--ink)">${esc(r.component)}</td>
+        <td style="color:var(--muted)">${Number(r.weight)}%</td>
+        <td style="color:var(--muted)">${has ? r.score + ' / ' + r.max_score : '—'}</td>
+        <td>${has ? `<span class="badge ${col.badge}">${pct.toFixed(1)}%</span>` : `<span class="badge badge-secondary">Pending</span>`}</td>
+      </tr>`;
+    }).join("");
+    const col = gradeColor(weighted);
+    courseScores.push(weighted);
+    html += `<div class="card">
+      <div class="card-header">
+        ${esc(c.title)} <span style="color:var(--subtle);font-weight:600">· ${esc(c.code)}</span>
+        <span style="margin-left:auto;display:flex;align-items:baseline;gap:.4rem;text-transform:none;letter-spacing:0">
+          <span class="grade-ring" style="color:${col.txt}">${weighted.toFixed(1)}</span>
+          <span style="font-size:.72rem;color:var(--subtle)">/ 100 so far</span>
+        </span>
+      </div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Component</th><th>Weight</th><th>Score</th><th>Result</th></tr></thead>
+        <tbody>${rowsHtml}</tbody>
+      </table></div>
+    </div>`;
+  }
+
+  // summary band
+  const avg = courseScores.length ? (courseScores.reduce((a,b)=>a+b,0) / courseScores.length) : 0;
+  const gradedCount = assignments.filter(a => a.status === 'graded').length;
+  const col = gradeColor(avg);
+  document.getElementById("grades-summary").innerHTML = `
+    <div class="numbers">
+      <div><div class="n" style="color:${col.txt}">${avg.toFixed(1)}</div><div class="l">Term average</div></div>
+      <div><div class="n">${courseScores.length}</div><div class="l">Graded courses</div></div>
+      <div><div class="n">${assignments.length}</div><div class="l">Assignments</div></div>
+      <div><div class="n">${gradedCount}</div><div class="l">Returned</div></div>
+    </div>`;
+
+  if (assignments.length) {
+    const aRows = assignments.map(a => {
+      const has = a.score !== null && a.score !== undefined;
+      const pct = has ? (a.score / a.max_score) * 100 : null;
+      const col = has ? gradeColor(pct) : null;
+      let st = "<span class='badge badge-secondary'>Not submitted</span>";
+      if (a.status === "submitted") st = "<span class='badge badge-info'>Submitted</span>";
+      if (a.status === "graded")   st = "<span class='badge badge-success'>Graded</span>";
+      return `<tr>
+        <td style="font-weight:600;color:var(--ink)">${esc(a.assignment)}</td>
+        <td style="color:var(--muted);font-size:.85rem">${esc(a.course_title)}</td>
+        <td>${has ? `<span class="badge ${col.badge}">${a.score} / ${a.max_score}</span>` : '—'}</td>
+        <td>${st}</td>
+      </tr>`;
+    }).join("");
+    html += `<div class="card">
+      <div class="card-header">Assignment scores</div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Assignment</th><th>Course</th><th>Score</th><th>Status</th></tr></thead>
+        <tbody>${aRows}</tbody>
+      </table></div>
+    </div>`;
+  }
+
+  root.innerHTML = html;
+})();
+</script>
+</body>
+</html>

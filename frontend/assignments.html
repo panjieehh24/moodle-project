@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Assignments — UGM Learn</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .modal-ov { display:none; position:fixed; inset:0; background:rgba(16,30,48,.55);
+      z-index:300; align-items:center; justify-content:center; backdrop-filter:blur(4px); }
+    .modal-ov.open { display:flex; }
+    .modal-card { background:var(--surface); border:1px solid var(--line-2);
+      border-radius:var(--r-lg); padding:2rem; width:480px; max-width:92vw;
+      max-height:88vh; overflow-y:auto; box-shadow:var(--shadow-xl); }
+    .modal-card h3 { font-family:var(--serif); margin:0 0 1.25rem; font-weight:500; font-size:1.4rem; color:var(--ink); letter-spacing:-.01em; }
+    .sub-row { border:1px solid var(--line); border-radius:var(--r-md); padding:.9rem 1rem; margin-bottom:.7rem; background:var(--surface-2); }
+  </style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg></div>
+      <span class="brand-name">UGM Learn</span>
+    </div>
+    <nav></nav>
+    <div class="sidebar-footer">
+      <button class="logout-btn" onclick="logout()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> Sign out</button>
+    </div>
+  </aside>
+
+  <div class="main-wrap">
+    <header class="topbar">
+      <span class="page-title">Assignments</span>
+      <div class="topbar-right">
+        <button class="bell-btn" onclick="location.href='notifications.html'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg><span class="bell-badge" id="bell-badge"></span></button>
+        <div class="user-chip">
+          <div class="user-avatar" id="user-avatar">?</div>
+          <div class="user-info"><strong id="user-name"></strong><span id="user-role"></span></div>
+        </div>
+      </div>
+    </header>
+
+    <main class="content">
+      <div class="masthead">
+        <div class="masthead-row">
+          <div>
+            <span class="kicker">Coursework</span>
+            <h1>Assignments</h1>
+            <p class="lede" id="assign-sub">Everything due across your courses, sorted by deadline.</p>
+          </div>
+          <button class="btn btn-primary" id="create-btn" style="display:none" onclick="openCreate()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            New assignment
+          </button>
+        </div>
+        <hr class="rule">
+      </div>
+
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Title</th><th>Course</th><th>Due date</th><th id="col4">Status</th><th></th></tr></thead>
+            <tbody id="assignment-body"><tr><td colspan="5"><em style="color:var(--muted)">Loading…</em></td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- SUBMIT (student) -->
+  <div class="modal-ov" id="submit-modal">
+    <div class="modal-card" style="width:420px">
+      <h3 id="submit-title"></h3>
+      <div id="submit-msg" class="alert" style="display:none"></div>
+      <div class="form-group">
+        <label>Upload file <span style="font-weight:400;font-size:.78rem;color:var(--muted)">(max 20 MB)</span></label>
+        <input class="form-control" type="file" id="submit-file">
+      </div>
+      <div style="display:flex;gap:.65rem;justify-content:flex-end">
+        <button class="btn" onclick="closeModal('submit-modal')">Cancel</button>
+        <button class="btn btn-primary" id="submit-go" onclick="doSubmit()">Submit</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CREATE (lecturer) -->
+  <div class="modal-ov" id="create-modal">
+    <div class="modal-card">
+      <h3>Create assignment</h3>
+      <div id="create-msg" class="alert" style="display:none"></div>
+      <div class="form-group"><label>Course</label><select class="form-control" id="c-course"></select></div>
+      <div class="form-group"><label>Title</label><input class="form-control" id="c-title"></div>
+      <div class="form-group"><label>Description</label><textarea class="form-control" id="c-desc"></textarea></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem">
+        <div class="form-group"><label>Type</label>
+          <select class="form-control" id="c-type">
+            <option value="upload">File upload</option>
+            <option value="text">Text response</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Max score</label><input class="form-control" id="c-max" type="number" value="100"></div>
+      </div>
+      <div class="form-group"><label>Due date</label><input class="form-control" id="c-due" type="datetime-local"></div>
+      <div style="display:flex;gap:.65rem;justify-content:flex-end">
+        <button class="btn" onclick="closeModal('create-modal')">Cancel</button>
+        <button class="btn btn-primary" onclick="doCreate()">Create</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUBMISSIONS (lecturer) -->
+  <div class="modal-ov" id="subs-modal">
+    <div class="modal-card">
+      <h3 id="subs-title"></h3>
+      <div id="subs-body"><em style="color:var(--muted)">Loading…</em></div>
+      <div style="display:flex;justify-content:flex-end;margin-top:1rem">
+        <button class="btn" onclick="closeModal('subs-modal')">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script>
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let ME = null, currentAssignmentId = null;
+
+function closeModal(id) { document.getElementById(id).classList.remove("open"); }
+
+(async () => {
+  ME = await initShell();
+  if (!ME) return;
+  if (ME.name) document.getElementById("user-avatar").textContent = ME.name.charAt(0).toUpperCase();
+  if (ME.role === "lecturer") {
+    document.getElementById("create-btn").style.display = "inline-flex";
+    document.getElementById("col4").textContent = "Submissions";
+    document.getElementById("assign-sub").textContent = "Coursework you\u2019ve set — review and grade submissions.";
+  }
+  loadAssignments();
+})();
+
+async function loadAssignments() {
+  const tbody = document.getElementById("assignment-body");
+  const assignments = (await api.assignments.list()).sort((a,b)=>new Date(a.due_at)-new Date(b.due_at));
+  if (assignments.length === 0) {
+    tbody.innerHTML = "<tr><td colspan='5'><em style='color:var(--muted)'>No assignments found</em></td></tr>";
+    return;
+  }
+  const now = Date.now();
+  tbody.innerHTML = assignments.map(a => {
+    const due = new Date(a.due_at);
+    const overdue = due < now;
+    const diff = Math.ceil((due - now) / 86400000);
+    const dueCls = overdue ? "badge-danger" : diff <= 3 ? "badge-warning" : "badge-success";
+    const dueLabel = overdue ? "Overdue" : diff === 0 ? "Due today" : diff + "d left";
+    let col4, action = "";
+    if (ME.role === "lecturer") {
+      col4 = `<span class="badge badge-info">${a.submission_count || 0} submitted</span>`;
+      action = `<button class="btn btn-sm" onclick="openSubs('${a.id}','${esc(a.title)}')">Review</button>`;
+    } else {
+      col4 = "<span class='badge badge-secondary'>Not submitted</span>";
+      if (a.my_status === "submitted") col4 = "<span class='badge badge-info'>Submitted</span>";
+      if (a.my_status === "graded") col4 = `<span class='badge badge-success'>Graded · ${a.my_grade ?? '—'}</span>`;
+      if (ME.role === "student" && !overdue && a.my_status !== "graded")
+        action = `<button class="btn btn-primary btn-sm" onclick="openSubmit('${a.id}','${esc(a.title)}')">Submit</button>`;
+    }
+    return `<tr>
+      <td><div style="font-weight:600;font-size:.9rem;color:var(--ink)">${esc(a.title)}</div>
+          <div style="font-size:.76rem;color:var(--muted);margin-top:.2rem">${esc(a.description||'')}</div></td>
+      <td style="color:var(--muted);font-size:.85rem">${esc(a.course_title)}</td>
+      <td><span class="badge ${dueCls}">${dueLabel}</span>
+          <div style="font-size:.73rem;color:var(--subtle);margin-top:.3rem">${due.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</div></td>
+      <td>${col4}</td>
+      <td style="text-align:right">${action}</td>
+    </tr>`;
+  }).join("");
+}
+
+function openSubmit(id, title) {
+  currentAssignmentId = id;
+  document.getElementById("submit-title").textContent = "Submit: " + title;
+  document.getElementById("submit-msg").style.display = "none";
+  document.getElementById("submit-file").value = "";
+  document.getElementById("submit-go").disabled = false;
+  document.getElementById("submit-modal").classList.add("open");
+}
+async function doSubmit() {
+  const f = document.getElementById("submit-file"), msg = document.getElementById("submit-msg");
+  if (!f.files[0]) { msg.className="alert alert-danger"; msg.textContent="Please choose a file"; msg.style.display="block"; return; }
+  const fd = new FormData(); fd.append("file", f.files[0]);
+  try {
+    await api.assignments.submit(currentAssignmentId, fd);
+    msg.className="alert alert-success"; msg.textContent="Submitted successfully!"; msg.style.display="block";
+    document.getElementById("submit-go").disabled = true;
+    loadAssignments();
+  } catch(e) { msg.className="alert alert-danger"; msg.textContent=e.message; msg.style.display="block"; }
+}
+
+async function openCreate() {
+  document.getElementById("create-msg").style.display = "none";
+  ["c-title","c-desc","c-due"].forEach(id => document.getElementById(id).value = "");
+  document.getElementById("c-max").value = 100;
+  const courses = await api.courses.list();
+  document.getElementById("c-course").innerHTML = courses.map(c => `<option value="${c.id}">${esc(c.title)}</option>`).join("");
+  document.getElementById("create-modal").classList.add("open");
+}
+async function doCreate() {
+  const msg = document.getElementById("create-msg");
+  const body = {
+    course_id: document.getElementById("c-course").value,
+    title: document.getElementById("c-title").value.trim(),
+    description: document.getElementById("c-desc").value.trim(),
+    type: document.getElementById("c-type").value,
+    max_score: Number(document.getElementById("c-max").value) || 100,
+    due_at: document.getElementById("c-due").value,
+  };
+  if (!body.title || !body.due_at) {
+    msg.className="alert alert-danger"; msg.textContent="Title and due date are required"; msg.style.display="block"; return;
+  }
+  try {
+    await api.assignments.create(body);
+    closeModal("create-modal");
+    loadAssignments();
+  } catch(e) { msg.className="alert alert-danger"; msg.textContent=e.message; msg.style.display="block"; }
+}
+
+async function openSubs(id, title) {
+  currentAssignmentId = id;
+  document.getElementById("subs-title").textContent = "Submissions: " + title;
+  document.getElementById("subs-body").innerHTML = "<em style='color:var(--muted)'>Loading…</em>";
+  document.getElementById("subs-modal").classList.add("open");
+  const subs = await api.assignments.submissions(id);
+  if (subs.length === 0) {
+    document.getElementById("subs-body").innerHTML = "<em style='color:var(--muted)'>No submissions yet</em>";
+    return;
+  }
+  document.getElementById("subs-body").innerHTML = subs.map(s => `
+    <div class="sub-row">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem">
+        <div>
+          <div style="font-weight:600;color:var(--ink)">${esc(s.student_name)}</div>
+          <div style="font-size:.76rem;color:var(--muted)">${esc(s.student_email)} &middot; ${new Date(s.submitted_at).toLocaleString()}</div>
+        </div>
+        <span class="badge ${s.status==='graded'?'badge-success':'badge-info'}">${s.status}</span>
+      </div>
+      <div style="font-size:.78rem;color:var(--muted);margin-bottom:.6rem">File: ${esc(s.file_path||'No file')}</div>
+      <div style="display:grid;grid-template-columns:90px 1fr auto;gap:.5rem;align-items:center">
+        <input class="form-control" type="number" placeholder="Score" id="sc-${s.student_id}" value="${s.score ?? ''}">
+        <input class="form-control" placeholder="Feedback" id="fb-${s.student_id}" value="${esc(s.feedback||'')}">
+        <button class="btn btn-primary btn-sm" onclick="doGrade('${s.student_id}')">Save</button>
+      </div>
+      <span id="gmsg-${s.student_id}" style="font-size:.78rem"></span>
+    </div>`).join("");
+}
+async function doGrade(studentId) {
+  const score = document.getElementById("sc-"+studentId).value;
+  const feedback = document.getElementById("fb-"+studentId).value;
+  const m = document.getElementById("gmsg-"+studentId);
+  if (score === "") { m.textContent="Enter a score"; m.style.color="var(--rose)"; return; }
+  try {
+    await api.assignments.grade(currentAssignmentId, studentId, Number(score), feedback);
+    m.textContent="Saved"; m.style.color="var(--emerald)";
+  } catch(e) { m.textContent=e.message; m.style.color="var(--rose)"; }
+}
+</script>
+</body>
+</html>

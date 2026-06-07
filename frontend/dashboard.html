@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dashboard — UGM Learn</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg></div>
+      <span class="brand-name">UGM Learn</span>
+    </div>
+    <nav></nav>
+    <div class="sidebar-footer">
+      <button class="logout-btn" onclick="logout()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> Sign out</button>
+    </div>
+  </aside>
+
+  <div class="main-wrap">
+    <header class="topbar">
+      <span class="page-title">Dashboard</span>
+      <div class="topbar-right">
+        <button class="bell-btn" onclick="toggleNotifPanel()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg><span class="bell-badge" id="bell-badge"></span></button>
+        <div class="user-chip">
+          <div class="user-avatar" id="user-avatar">?</div>
+          <div class="user-info"><strong id="user-name"></strong><span id="user-role"></span></div>
+        </div>
+      </div>
+    </header>
+
+    <main class="content">
+      <!-- MASTHEAD -->
+      <div class="masthead">
+        <div class="masthead-row">
+          <div>
+            <span class="kicker" id="hero-kicker">Genap 2025 / 2026</span>
+            <h1 id="hero-greeting">Welcome back</h1>
+            <p class="lede" id="hero-sub">Loading your overview…</p>
+          </div>
+          <div class="meta-pills" id="hero-pills"></div>
+        </div>
+        <hr class="rule">
+      </div>
+
+      <!-- NUMBERS -->
+      <div class="numbers" id="stats"></div>
+
+      <!-- LOWER GRID -->
+      <div class="grid-2" style="margin-top:1.75rem;align-items:start">
+        <section>
+          <div class="section-head">
+            <h3>Upcoming deadlines</h3>
+            <a class="link" href="assignments.html">All assignments →</a>
+          </div>
+          <div class="card"><div class="card-body" id="upcoming-list"><em style="color:var(--muted)">Loading…</em></div></div>
+        </section>
+        <section>
+          <div class="section-head">
+            <h3>Recent announcements</h3>
+            <a class="link" href="notifications.html">View all →</a>
+          </div>
+          <div class="card"><div class="card-body" id="notif-list"><em style="color:var(--muted)">Loading…</em></div></div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <div class="notif-panel" id="notif-panel">
+    <div class="notif-panel-header">Notifications<button onclick="toggleNotifPanel()">&#x2715;</button></div>
+    <div id="notif-panel-body"></div>
+  </div>
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script>
+const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+(async () => {
+  const user = await initShell();
+  if (!user) return;
+  if (user.name) document.getElementById("user-avatar").textContent = user.name.charAt(0).toUpperCase();
+
+  const hour = new Date().getHours();
+  const greet = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+  document.getElementById("hero-greeting").textContent = greet + ', ' + (user.name ? user.name.split(' ')[0] : 'there');
+
+  const [courses, assignments] = await Promise.all([api.courses.list(), api.assignments.list()]);
+  const now = Date.now();
+  const upcoming = assignments.filter(a => new Date(a.due_at) > now).sort((a,b)=>new Date(a.due_at)-new Date(b.due_at));
+
+  const roleLine = user.role === 'student'
+    ? courses.length + ' courses this term · stay on top of what\u2019s due'
+    : courses.length + ' courses you teach · ' + assignments.reduce((n,a)=>n+(a.submission_count||0),0) + ' submissions to review';
+  document.getElementById("hero-sub").textContent = roleLine;
+
+  const pills = [];
+  pills.push(new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }));
+  if (upcoming.length) pills.push(upcoming.length + ' due soon');
+  document.getElementById("hero-pills").innerHTML = pills.map(p => `<span class="meta-pill">${p}</span>`).join('');
+
+  // numbers strip — role aware
+  let cells;
+  if (user.role === 'student') {
+    cells = [
+      { n: courses.length, l: 'Courses enrolled' },
+      { n: upcoming.length, l: 'Due soon' },
+      { n: assignments.filter(a => a.my_status === 'submitted').length, l: 'Submitted' },
+      { n: assignments.filter(a => a.my_status === 'graded').length, l: 'Graded' },
+    ];
+  } else {
+    cells = [
+      { n: courses.length, l: 'Courses teaching' },
+      { n: assignments.length, l: 'Assignments' },
+      { n: assignments.reduce((s,a)=>s+(a.submission_count||0),0), l: 'Submissions' },
+      { n: courses.reduce((s,c)=>s+(c.student_count||0),0), l: 'Students' },
+    ];
+  }
+  document.getElementById("stats").innerHTML = cells.map(c =>
+    `<div><div class="n">${c.n}</div><div class="l">${c.l}</div></div>`).join('');
+
+  // upcoming deadlines
+  const upEl = document.getElementById("upcoming-list");
+  if (upcoming.length === 0) {
+    upEl.innerHTML = `<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><p>Nothing due — you\u2019re all caught up.</p></div>`;
+  } else {
+    upEl.innerHTML = upcoming.slice(0, 5).map(a => {
+      const due = new Date(a.due_at);
+      const diff = Math.ceil((due - now) / 86400000);
+      const cls = diff <= 2 ? 'is-urgent' : diff <= 5 ? 'is-soon' : '';
+      const label = diff === 0 ? 'Due today' : diff === 1 ? 'Due tomorrow' : 'In ' + diff + ' days';
+      return `<div class="list-row">
+        <div class="date-chip ${cls}"><div class="d-day">${due.getDate()}</div><div class="d-mon">${MON[due.getMonth()]}</div></div>
+        <div class="lr-main"><div class="lr-title">${a.title}</div><div class="lr-meta">${a.course_title} · ${label}</div></div>
+      </div>`;
+    }).join('');
+  }
+
+  // announcements
+  const notifs = await api.notifications.list();
+  const nEl = document.getElementById("notif-list");
+  if (notifs.length === 0) {
+    nEl.innerHTML = `<div class="empty"><p>No announcements yet.</p></div>`;
+  } else {
+    nEl.innerHTML = notifs.slice(0, 4).map((n, i, arr) => `
+      <div class="list-row" style="align-items:flex-start">
+        <div class="lr-main">
+          <div class="lr-title">${n.title}</div>
+          <div class="lr-meta">${n.course_title} · ${new Date(n.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric'})}</div>
+        </div>
+        ${!n.is_read ? '<span class="badge badge-warning">New</span>' : ''}
+      </div>`).join('');
+  }
+
+  document.getElementById("notif-panel-body").innerHTML = notifs.length === 0
+    ? "<div style='padding:1.4rem;color:var(--muted);font-size:.88rem'>No notifications</div>"
+    : notifs.map(n => `
+      <div class="notif-item ${n.is_read ? '' : 'unread'}" onclick="markRead('${n.id}', this)">
+        <div class="notif-title">${n.title}</div>
+        <div class="notif-meta">${n.course_title} &middot; ${new Date(n.created_at).toLocaleDateString()}</div>
+        <div style="font-size:.82rem;margin-top:.4rem;color:var(--muted);line-height:1.55">${n.body}</div>
+      </div>`).join('');
+})();
+
+function toggleNotifPanel() { document.getElementById("notif-panel").classList.toggle("open"); }
+
+async function markRead(id, el) {
+  await api.notifications.markRead(id);
+  el.classList.remove("unread");
+  const badge = document.getElementById("bell-badge");
+  const count = parseInt(badge.textContent) - 1;
+  if (count <= 0) { badge.classList.remove("show"); } else { badge.textContent = count; }
+}
+</script>
+</body>
+</html>

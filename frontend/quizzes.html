@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Quizzes — UGM Learn</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg></div>
+      <span class="brand-name">UGM Learn</span>
+    </div>
+    <nav></nav>
+    <div class="sidebar-footer">
+      <button class="logout-btn" onclick="logout()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> Sign out</button>
+    </div>
+  </aside>
+
+  <div class="main-wrap">
+    <header class="topbar">
+      <span class="page-title" id="page-title">Quizzes</span>
+      <div class="topbar-right">
+        <button class="bell-btn" onclick="location.href='notifications.html'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg><span class="bell-badge" id="bell-badge"></span></button>
+        <div class="user-chip">
+          <div class="user-avatar" id="user-avatar">?</div>
+          <div class="user-info"><strong id="user-name"></strong><span id="user-role"></span></div>
+        </div>
+      </div>
+    </header>
+
+    <main class="content">
+      <!-- LIST -->
+      <div id="list-view">
+        <div class="masthead">
+          <span class="kicker">Assessments</span>
+          <h1>Quizzes</h1>
+          <p class="lede">Timed checks for understanding across your courses.</p>
+          <hr class="rule">
+        </div>
+        <div id="quiz-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:1.25rem">
+          <em style="color:var(--muted)">Loading…</em>
+        </div>
+      </div>
+
+      <!-- TAKE QUIZ -->
+      <div id="quiz-view" style="display:none;max-width:760px">
+        <button class="btn btn-sm" onclick="showList()" style="margin-bottom:1.5rem">← Back to quizzes</button>
+        <div class="masthead" style="margin-bottom:1.25rem"><span class="kicker" id="quiz-kicker">Quiz</span><h1 id="quiz-heading" style="font-size:2rem">Quiz</h1></div>
+        <div id="quiz-questions"></div>
+        <div id="quiz-submit-msg" class="alert" style="display:none"></div>
+        <button class="btn btn-primary" id="quiz-submit" onclick="submitQuiz()" style="padding:.75rem 2rem">Submit quiz</button>
+      </div>
+
+      <!-- RESULT -->
+      <div id="result-view" style="display:none">
+        <div class="card" style="max-width:460px;margin:3rem auto;text-align:center">
+          <div class="card-body" style="padding:3rem 2rem">
+            <div id="result-icon" style="width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;background:var(--gold-soft)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="var(--gold-700)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:28px;height:28px"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <div class="result-score" id="result-score">—</div>
+            <div style="color:var(--muted);font-size:.92rem;margin:.6rem 0 1.75rem" id="result-detail"></div>
+            <button class="btn btn-primary" onclick="showList()">Back to quizzes</button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script>
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let activeQuiz = null;
+
+(async () => {
+  const user = await initShell();
+  if (!user) return;
+  if (user.name) document.getElementById("user-avatar").textContent = user.name.charAt(0).toUpperCase();
+  loadList();
+})();
+
+function showList() {
+  document.getElementById("list-view").style.display = "block";
+  document.getElementById("quiz-view").style.display = "none";
+  document.getElementById("result-view").style.display = "none";
+  document.getElementById("page-title").textContent = "Quizzes";
+  loadList();
+}
+
+async function loadList() {
+  const grid = document.getElementById("quiz-grid");
+  const quizzes = await api.quizzes.list();
+  if (quizzes.length === 0) {
+    grid.innerHTML = `<div class="empty" style="grid-column:1/-1"><p>No quizzes available for your courses.</p></div>`;
+    return;
+  }
+  grid.innerHTML = quizzes.map((q, i) => {
+    const spine = (i % 6) + 1;
+    const taken = q.my_status === "graded";
+    const action = taken
+      ? `<span class="badge badge-success">Scored ${q.my_score}</span><button class="btn btn-sm" style="margin-left:auto" onclick="openQuiz('${q.quiz_id}')">Retake</button>`
+      : `<button class="btn btn-primary btn-sm" style="margin-left:auto" onclick="openQuiz('${q.quiz_id}')">Start →</button>`;
+    return `<article class="course-tile">
+      <div class="course-spine spine-${spine}"></div>
+      <div class="course-tile-body">
+        <div class="course-code">${esc(q.course_title)}</div>
+        <h3>${esc(q.title)}</h3>
+        <p class="desc">A timed, multiple-choice assessment — ${q.time_limit_min} minutes, one attempt.</p>
+        <div class="foot">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <span>${q.time_limit_min} min</span>${action}
+        </div>
+      </div>
+    </article>`;
+  }).join("");
+}
+
+async function openQuiz(quizId) {
+  activeQuiz = await api.quizzes.get(quizId);
+  document.getElementById("list-view").style.display = "none";
+  document.getElementById("result-view").style.display = "none";
+  document.getElementById("quiz-view").style.display = "block";
+  document.getElementById("page-title").textContent = activeQuiz.title;
+  document.getElementById("quiz-heading").textContent = activeQuiz.title;
+  document.getElementById("quiz-kicker").textContent = (activeQuiz.questions.length) + " questions";
+  document.getElementById("quiz-submit-msg").style.display = "none";
+  document.getElementById("quiz-submit").disabled = false;
+
+  document.getElementById("quiz-questions").innerHTML = activeQuiz.questions.map((q, i) => `
+    <div class="question">
+      <div class="q-body"><span class="q-num">Q${i + 1}</span>${esc(q.body)}
+        <span class="badge badge-secondary" style="margin-left:.4rem">${Number(q.points)} pt</span></div>
+      ${q.options.length
+        ? q.options.map(o => `
+          <label class="option" onclick="pick(this)">
+            <input type="radio" name="q-${q.id}" value="${o.id}">
+            <span>${esc(o.body)}</span>
+          </label>`).join("")
+        : `<input class="form-control" placeholder="Short answer (not auto-graded)" disabled>`}
+    </div>`).join("");
+}
+
+function pick(label) {
+  label.parentElement.querySelectorAll(".option").forEach(o => o.classList.remove("picked"));
+  label.classList.add("picked");
+}
+
+async function submitQuiz() {
+  const answers = {};
+  let answered = 0;
+  activeQuiz.questions.forEach(q => {
+    const sel = document.querySelector(`input[name="q-${q.id}"]:checked`);
+    if (sel) { answers[q.id] = sel.value; answered++; }
+  });
+  const msg = document.getElementById("quiz-submit-msg");
+  if (answered === 0) {
+    msg.className = "alert alert-danger"; msg.textContent = "Answer at least one question."; msg.style.display = "block";
+    return;
+  }
+  document.getElementById("quiz-submit").disabled = true;
+  try {
+    const r = await api.quizzes.submit(activeQuiz.id, answers);
+    const pct = Number(r.score);
+    document.getElementById("quiz-view").style.display = "none";
+    document.getElementById("result-view").style.display = "block";
+    document.getElementById("page-title").textContent = "Result";
+    const pass = pct >= 60;
+    const col = pass ? "var(--emerald)" : "var(--rose)";
+    const iconEl = document.getElementById("result-icon");
+    iconEl.style.background = pass ? "var(--gold-soft)" : "var(--rose-bg)";
+    iconEl.innerHTML = pass
+      ? '<svg viewBox="0 0 24 24" fill="none" stroke="var(--gold-700)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:28px;height:28px"><polyline points="20 6 9 17 4 12"/></svg>'
+      : '<svg viewBox="0 0 24 24" fill="none" stroke="var(--rose)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:28px;height:28px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+    const rs = document.getElementById("result-score");
+    rs.textContent = pct + "%"; rs.style.color = col;
+    document.getElementById("result-detail").textContent =
+      `You answered ${r.correct} of ${r.questions} questions correctly.`;
+  } catch (e) {
+    msg.className = "alert alert-danger"; msg.textContent = e.message; msg.style.display = "block";
+    document.getElementById("quiz-submit").disabled = false;
+  }
+}
+</script>
+</body>
+</html>

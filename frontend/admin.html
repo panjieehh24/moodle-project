@@ -1,0 +1,305 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin — UGM Learn</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg></div>
+      <span class="brand-name">UGM Learn</span>
+    </div>
+    <nav></nav>
+    <div class="sidebar-footer">
+      <button class="logout-btn" onclick="logout()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> Sign out</button>
+    </div>
+  </aside>
+
+  <div class="main-wrap">
+    <header class="topbar">
+      <span class="page-title">Admin Panel</span>
+      <div class="topbar-right">
+        <div class="user-chip">
+          <div class="user-avatar" id="user-avatar">?</div>
+          <div class="user-info">
+            <strong id="user-name"></strong>
+            <span id="user-role"></span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="content">
+      <div class="masthead">
+        <span class="kicker">Administration</span>
+        <h1>Control panel</h1>
+        <p class="lede">Manage users, courses, system settings and review activity across the platform.</p>
+        <hr class="rule">
+      </div>
+
+      <div class="numbers" id="stats" style="margin-bottom:1.75rem"></div>
+
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="users">Users</button>
+        <button class="tab-btn" data-tab="courses">Courses</button>
+        <button class="tab-btn" data-tab="settings">Settings</button>
+        <button class="tab-btn" data-tab="audit">Audit Log</button>
+      </div>
+
+      <!-- USERS -->
+      <div class="tab-panel active" id="tab-users">
+        <div class="card">
+          <div class="card-header">
+            All Users
+            <button class="btn btn-primary btn-sm" style="margin-left:auto" onclick="openUserModal()">+ Add User</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Joined</th><th></th></tr></thead>
+              <tbody id="users-body"><tr><td colspan="6"><em style="color:var(--muted)">Loading…</em></td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- COURSES -->
+      <div class="tab-panel" id="tab-courses">
+        <div class="card">
+          <div class="card-header">All Courses</div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Title</th><th>Code</th><th>Department</th><th>Lecturer</th><th>Students</th><th>Status</th></tr></thead>
+              <tbody id="courses-body"><tr><td colspan="6"><em style="color:var(--muted)">Loading…</em></td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- SETTINGS -->
+      <div class="tab-panel" id="tab-settings">
+        <div class="card">
+          <div class="card-header">System Settings</div>
+          <div class="card-body" id="settings-body"><em style="color:var(--muted)">Loading…</em></div>
+        </div>
+      </div>
+
+      <!-- AUDIT -->
+      <div class="tab-panel" id="tab-audit">
+        <div class="card">
+          <div class="card-header">Recent Activity</div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Time</th><th>User</th><th>Action</th><th>Entity</th></tr></thead>
+              <tbody id="audit-body"><tr><td colspan="4"><em style="color:var(--muted)">Loading…</em></td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- USER MODAL -->
+  <div id="modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(16,30,48,.55);z-index:300;align-items:center;justify-content:center;backdrop-filter:blur(4px)">
+    <div class="card" style="padding:2rem;width:440px;max-width:92vw;margin:0">
+      <h3 id="modal-title" style="margin:0 0 1.25rem;font-family:var(--serif);font-weight:500;font-size:1.4rem;color:var(--ink)"></h3>
+      <div id="modal-msg" class="alert" style="display:none"></div>
+      <div class="form-group"><label>Full name</label><input class="form-control" id="m-name"></div>
+      <div class="form-group"><label>Email</label><input class="form-control" id="m-email" type="email"></div>
+      <div class="form-group">
+        <label>Role</label>
+        <select class="form-control" id="m-role">
+          <option value="student">Student</option>
+          <option value="lecturer">Lecturer</option>
+          <option value="admin">Admin</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label id="m-pass-label">Password</label>
+        <input class="form-control" id="m-pass" type="text" placeholder="••••••••">
+      </div>
+      <div class="form-group" id="m-active-wrap" style="display:none">
+        <label>Status</label>
+        <select class="form-control" id="m-active">
+          <option value="1">Active</option>
+          <option value="0">Inactive</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:.65rem;justify-content:flex-end;margin-top:.5rem">
+        <button class="btn" onclick="closeModal()" style="background:var(--surface);border:1px solid var(--border);color:var(--muted)">Cancel</button>
+        <button class="btn btn-primary" id="m-save" onclick="saveUser()">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script>
+let editingId = null;
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+const SVG_PENCIL = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
+const SVG_TRASH = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>`;
+
+(async () => {
+  const user = await initShell();
+  if (!user) return;
+  if (user.role !== "admin") { location.href = "dashboard.html"; return; }
+  if (user.name) document.getElementById("user-avatar").textContent = user.name.charAt(0).toUpperCase();
+
+  const s = await api.admin.stats();
+  const cards = [
+    { n: s.users,       label: "Total Users",  glow: "rgba(99,102,241,.18)",  icon: "rgba(99,102,241,.1)"  },
+    { n: s.courses,     label: "Courses",      glow: "rgba(8,145,178,.18)",   icon: "rgba(8,145,178,.1)"   },
+    { n: s.enrollments, label: "Enrollments",  glow: "rgba(5,150,105,.18)",   icon: "rgba(5,150,105,.1)"   },
+    { n: s.submissions, label: "Submissions",  glow: "rgba(124,58,237,.18)",  icon: "rgba(124,58,237,.1)"  },
+  ];
+  const statIcons = [
+    `<svg viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>`,
+    `<svg viewBox="0 0 24 24" fill="none" stroke="#0891b2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>`,
+    `<svg viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>`,
+    `<svg viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 8.81 19.79 19.79 0 01.09 2.18 2 2 0 012.09 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>`,
+  ];
+  document.getElementById("stats").innerHTML = cards.map((c) => `
+    <div><div class="n">${c.n}</div><div class="l">${c.label}</div></div>`).join("");
+
+  loadUsers();
+})();
+
+// ---- Tabs ----
+const loaded = { users: true, courses: false, settings: false, audit: false };
+document.querySelectorAll(".tab-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const tab = btn.dataset.tab;
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.toggle("active", b === btn));
+    document.querySelectorAll(".tab-panel").forEach(p => p.classList.toggle("active", p.id === "tab-" + tab));
+    if (!loaded[tab]) {
+      loaded[tab] = true;
+      if (tab === "courses") loadCourses();
+      if (tab === "settings") loadSettings();
+      if (tab === "audit") loadAudit();
+    }
+  });
+});
+
+// ---- Users ----
+async function loadUsers() {
+  const body = document.getElementById("users-body");
+  const users = await api.admin.listUsers();
+  const roleBadge = { admin: "badge-danger", lecturer: "badge-info", student: "badge-secondary" };
+  body.innerHTML = users.map(u => `
+    <tr>
+      <td style="font-weight:600;color:var(--text)">${esc(u.name)}</td>
+      <td style="color:var(--muted);font-size:.85rem">${esc(u.email)}</td>
+      <td><span class="badge ${roleBadge[u.role] || 'badge-secondary'}">${u.role}</span></td>
+      <td><span class="badge ${u.is_active ? 'badge-success' : 'badge-secondary'}">${u.is_active ? 'Active' : 'Inactive'}</span></td>
+      <td style="color:var(--subtle);font-size:.8rem">${new Date(u.created_at).toLocaleDateString()}</td>
+      <td><div class="row-actions">
+        <button class="icon-btn" title="Edit" onclick='openUserModal(${JSON.stringify(u)})'>${SVG_PENCIL}</button>
+        <button class="icon-btn danger" title="Delete" onclick="removeUser('${u.id}','${esc(u.name)}')">${SVG_TRASH}</button>
+      </div></td>
+    </tr>`).join("") || "<tr><td colspan='6'><em style='color:var(--muted)'>No users</em></td></tr>";
+}
+
+async function loadCourses() {
+  const body = document.getElementById("courses-body");
+  const courses = await api.admin.listCourses();
+  body.innerHTML = courses.map(c => `
+    <tr>
+      <td style="font-weight:600;color:var(--text)">${esc(c.title)}</td>
+      <td style="color:var(--muted);font-size:.85rem">${esc(c.code)}</td>
+      <td style="color:var(--muted);font-size:.85rem">${esc(c.department || '—')}</td>
+      <td style="color:var(--muted);font-size:.85rem">${esc(c.lecturer_name || '—')}</td>
+      <td><span class="badge badge-info">${c.student_count}</span></td>
+      <td><span class="badge ${c.is_active ? 'badge-success' : 'badge-secondary'}">${c.is_active ? 'Active' : 'Archived'}</span></td>
+    </tr>`).join("") || "<tr><td colspan='6'><em style='color:var(--muted)'>No courses</em></td></tr>";
+}
+
+let settingsCache = [];
+async function loadSettings() {
+  settingsCache = await api.admin.getSettings();
+  document.getElementById("settings-body").innerHTML = settingsCache.map(s => `
+    <div class="form-group">
+      <label>${esc(s.setting_key)}</label>
+      <input class="form-control" data-key="${esc(s.setting_key)}" value="${esc(s.setting_value)}">
+      <div style="font-size:.76rem;color:var(--subtle);margin-top:.35rem">${esc(s.description || '')}</div>
+    </div>`).join("") +
+    `<button class="btn btn-primary" onclick="saveSettings()">Save settings</button>
+     <span id="settings-msg" style="margin-left:1rem;font-size:.85rem"></span>`;
+}
+
+async function saveSettings() {
+  const payload = {};
+  document.querySelectorAll("#settings-body input[data-key]").forEach(i => payload[i.dataset.key] = i.value);
+  const msg = document.getElementById("settings-msg");
+  try {
+    await api.admin.updateSettings(payload);
+    msg.textContent = "Saved"; msg.style.color = "var(--emerald)";
+  } catch (e) { msg.textContent = e.message; msg.style.color = "var(--rose)"; }
+}
+
+async function loadAudit() {
+  const body = document.getElementById("audit-body");
+  const logs = await api.admin.listAudit();
+  body.innerHTML = logs.map(l => `
+    <tr>
+      <td style="color:var(--subtle);font-size:.8rem">${new Date(l.created_at).toLocaleString()}</td>
+      <td style="color:var(--muted);font-size:.85rem">${esc(l.user_name || 'System')}</td>
+      <td style="font-weight:600;color:var(--text)">${esc(l.action)}</td>
+      <td style="color:var(--muted);font-size:.82rem">${esc(l.entity_type || '—')}</td>
+    </tr>`).join("") || "<tr><td colspan='4'><em style='color:var(--muted)'>No activity logged</em></td></tr>";
+}
+
+// ---- User modal ----
+function openUserModal(u) {
+  editingId = u && u.id ? u.id : null;
+  document.getElementById("modal-title").textContent = editingId ? "Edit User" : "Add User";
+  document.getElementById("modal-msg").style.display = "none";
+  document.getElementById("m-name").value = u ? u.name : "";
+  document.getElementById("m-email").value = u ? u.email : "";
+  document.getElementById("m-role").value = u ? u.role : "student";
+  document.getElementById("m-pass").value = "";
+  document.getElementById("m-pass-label").textContent = editingId ? "New password (leave blank to keep)" : "Password";
+  document.getElementById("m-active-wrap").style.display = editingId ? "block" : "none";
+  if (editingId) document.getElementById("m-active").value = String(u.is_active);
+  document.getElementById("modal-overlay").style.display = "flex";
+}
+function closeModal() { document.getElementById("modal-overlay").style.display = "none"; }
+
+async function saveUser() {
+  const msg = document.getElementById("modal-msg");
+  const body = {
+    name: document.getElementById("m-name").value.trim(),
+    email: document.getElementById("m-email").value.trim(),
+    role: document.getElementById("m-role").value,
+  };
+  const pass = document.getElementById("m-pass").value;
+  try {
+    if (editingId) {
+      body.is_active = document.getElementById("m-active").value === "1";
+      if (pass) body.password = pass;
+      await api.admin.updateUser(editingId, body);
+    } else {
+      if (!body.name || !body.email || !pass) throw new Error("Name, email and password are required");
+      body.password = pass;
+      await api.admin.createUser(body);
+    }
+    closeModal();
+    loadUsers();
+  } catch (e) {
+    msg.className = "alert alert-danger"; msg.textContent = e.message; msg.style.display = "block";
+  }
+}
+
+async function removeUser(id, name) {
+  if (!confirm(`Delete user "${name}"? This cannot be undone.`)) return;
+  try { await api.admin.deleteUser(id); loadUsers(); }
+  catch (e) { alert(e.message); }
+}
+</script>
+</body>
+</html>

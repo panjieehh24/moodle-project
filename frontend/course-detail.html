@@ -1,0 +1,1050 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Classroom — UGM Learn</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .course-banner {
+      border-radius: var(--r-lg);
+      overflow: hidden;
+      margin-bottom: 1.25rem;
+      position: relative;
+      height: 160px;
+      display: flex;
+      align-items: flex-end;
+      padding: 1.5rem;
+    }
+    .course-banner-info { position: relative; z-index: 1; }
+    .course-banner h1 { font-family: var(--serif); font-size: 2rem; font-weight: 500; color: #fff; margin: 0 0 .35rem; letter-spacing: -.01em; }
+    .course-banner p  { color: rgba(255,255,255,.72); font-size: .85rem; margin: 0; font-weight: 500; }
+    .stream-tabs { display: flex; gap: .2rem; background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--r-lg); padding: .3rem; width: fit-content; margin-bottom: 1.25rem; flex-wrap: wrap; }
+    .stream-tab { padding: .45rem 1rem; border: none; background: transparent; color: var(--muted);
+      font-size: .875rem; font-weight: 600; font-family: var(--sans);
+      border-radius: var(--r-md); cursor: pointer; transition: all .13s; white-space: nowrap; }
+    .stream-tab:hover  { background: var(--bg); color: var(--text); }
+    .stream-tab.active { background: var(--navy); color: #fff; font-weight: 700; }
+    .tab-panel        { display: none; }
+    .tab-panel.active { display: block; }
+    .assign-row { display: flex; align-items: center; gap: 1rem; padding: .9rem 1.25rem;
+      border-bottom: 1px solid var(--border); transition: background .12s; cursor: default; }
+    .assign-row:last-child { border-bottom: none; }
+    .assign-row:hover { background: var(--bg); }
+    .assign-icon { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center;
+      justify-content: center; flex-shrink: 0; }
+    .assign-info { flex: 1; min-width: 0; }
+    .assign-title { font-weight: 600; font-size: .9rem; color: var(--text); }
+    .assign-meta  { font-size: .76rem; color: var(--muted); margin-top: .15rem; }
+    .modal-ov { display:none; position:fixed; inset:0; background:rgba(16,30,48,.55);
+      z-index:300; align-items:center; justify-content:center; backdrop-filter:blur(4px); }
+    .modal-ov.open { display:flex; }
+    .modal-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--r-lg);
+      padding:2rem; width:500px; max-width:92vw; max-height:88vh; overflow-y:auto; box-shadow:var(--shadow-xl); }
+    .modal-card h3 { font-family:var(--serif); margin:0 0 1rem; font-weight:500; font-size:1.4rem; color:var(--ink); letter-spacing:-.01em; }
+    .sub-row { border:1px solid var(--border); border-radius:var(--r-md); padding:.9rem 1rem; margin-bottom:.6rem; }
+    .feedback-box { background:var(--emerald-bg); border:1px solid rgba(16,185,129,.2); border-radius:var(--r-md);
+      padding:.75rem 1rem; font-size:.85rem; color:#065f46; margin-top:.6rem; }
+    /* classroom additions */
+    .mat-row { display:flex; align-items:center; gap:.85rem; padding:.75rem 1.25rem; border-bottom:1px solid var(--border); }
+    .mat-row:last-child { border-bottom:none; }
+    .mat-ico { width:34px; height:34px; border-radius:9px; flex-shrink:0; display:flex; align-items:center; justify-content:center; background:var(--primary-bg); }
+    .person-row { display:flex; align-items:center; gap:.85rem; padding:.7rem 1.25rem; border-bottom:1px solid var(--border); }
+    .person-row:last-child { border-bottom:none; }
+    .person-avatar { width:36px; height:36px; border-radius:50%; flex-shrink:0; display:flex; align-items:center;
+      justify-content:center; color:#fff; font-weight:700; font-size:.9rem; background:linear-gradient(135deg,var(--primary),var(--violet)); }
+    .att-grid { display:grid; grid-template-columns:1fr auto; gap:.5rem; align-items:center; padding:.5rem 0; border-bottom:1px solid var(--border); }
+    .att-grid:last-child { border-bottom:none; }
+    .post { border:1px solid var(--border); border-radius:var(--r-md); padding:.9rem 1rem; margin-bottom:.7rem; }
+    .post-reply { margin-left:1.75rem; border-left:2px solid var(--primary-bg); }
+    .post-head { display:flex; align-items:center; gap:.6rem; margin-bottom:.45rem; }
+    .post-av { width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+      color:#fff; font-weight:700; font-size:.78rem; background:linear-gradient(135deg,var(--primary),var(--violet)); flex-shrink:0; }
+  </style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg></div>
+      <span class="brand-name">UGM Learn</span>
+    </div>
+    <nav></nav>
+    <div class="sidebar-footer">
+      <button class="logout-btn" onclick="logout()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> Sign out</button>
+    </div>
+  </aside>
+
+  <div class="main-wrap">
+    <header class="topbar">
+      <a href="courses.html" style="color:var(--muted);text-decoration:none;font-size:.875rem;display:flex;align-items:center;gap:.35rem;margin-right:.5rem">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><polyline points="15 18 9 12 15 6"/></svg>Courses
+      </a>
+      <span class="page-title" id="page-title">Classroom</span>
+      <div class="topbar-right">
+        <button class="bell-btn" onclick="location.href='notifications.html'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg><span class="bell-badge" id="bell-badge"></span></button>
+        <div class="user-chip">
+          <div class="user-avatar" id="user-avatar">?</div>
+          <div class="user-info"><strong id="user-name"></strong><span id="user-role"></span></div>
+        </div>
+      </div>
+    </header>
+
+    <main class="content">
+      <div class="course-banner" id="course-banner" style="background:linear-gradient(135deg,#4f46e5,#7c3aed)">
+        <div style="position:absolute;inset:0;background-image:radial-gradient(circle,rgba(255,255,255,.07) 1px,transparent 1px);background-size:28px 28px"></div>
+        <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.35),transparent)"></div>
+        <div class="course-banner-info">
+          <h1 id="course-title">Loading…</h1>
+          <p id="course-meta"></p>
+        </div>
+      </div>
+
+      <div class="stream-tabs">
+        <button class="stream-tab active" data-tab="stream">Stream</button>
+        <button class="stream-tab" data-tab="materials">Materials</button>
+        <button class="stream-tab" data-tab="assignments">Assignments</button>
+        <button class="stream-tab" data-tab="discussion">Discussion</button>
+        <button class="stream-tab" data-tab="attendance">Attendance</button>
+        <button class="stream-tab" data-tab="people">People</button>
+      </div>
+
+      <!-- STREAM -->
+      <div class="tab-panel active" id="tab-stream">
+        <div class="grid-2" style="grid-template-columns:1fr 320px">
+          <div>
+            <div id="announce-shortcut" style="display:none" class="card">
+              <div class="card-body" onclick="location.href='notifications.html'" style="display:flex;align-items:center;gap:.75rem;cursor:pointer;padding:.9rem 1.25rem">
+                <div class="user-avatar" id="announce-avatar" style="width:36px;height:36px;font-size:.9rem">?</div>
+                <div class="form-control" style="color:var(--muted);cursor:pointer;pointer-events:none">Announce something to your class…</div>
+              </div>
+            </div>
+            <div id="stream-list"><em style="color:var(--muted)">Loading…</em></div>
+          </div>
+          <div>
+            <div class="card">
+              <div class="card-header">Upcoming</div>
+              <div class="card-body" id="upcoming-side" style="padding:.75rem 1.25rem"><em style="color:var(--muted);font-size:.85rem">Loading…</em></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MATERIALS TAB -->
+      <div class="tab-panel" id="tab-materials">
+        <div style="display:flex;align-items:center;margin-bottom:1rem">
+          <h3 style="margin:0;font-size:1.05rem;font-weight:700;color:var(--text)">Course Materials</h3>
+          <button id="add-section-btn" class="btn btn-primary btn-sm" style="margin-left:auto;display:none" onclick="openSection()">+ Add section</button>
+        </div>
+        <div id="materials-list"><em style="color:var(--muted)">Loading…</em></div>
+      </div>
+
+      <!-- ASSIGNMENTS TAB -->
+      <div class="tab-panel" id="tab-assignments">
+        <div class="card">
+          <div class="card-header">
+            Assignments
+            <button id="create-btn" class="btn btn-primary btn-sm" style="margin-left:auto;display:none" onclick="openCreate()">+ Create</button>
+          </div>
+          <div id="assign-list"><em style="color:var(--muted);padding:1.25rem;display:block">Loading…</em></div>
+        </div>
+      </div>
+
+      <!-- DISCUSSION TAB -->
+      <div class="tab-panel" id="tab-discussion">
+        <div id="forum-list-view">
+          <div style="display:flex;align-items:center;margin-bottom:1rem">
+            <h3 style="margin:0;font-size:1.05rem;font-weight:700;color:var(--text)">Discussion Forums</h3>
+            <button id="add-forum-btn" class="btn btn-primary btn-sm" style="margin-left:auto;display:none" onclick="openForum()">+ New forum</button>
+          </div>
+          <div id="forums-list"><em style="color:var(--muted)">Loading…</em></div>
+        </div>
+        <div id="forum-thread-view" style="display:none">
+          <button class="btn btn-sm" style="margin-bottom:1rem;background:var(--bg);border:1px solid var(--border);color:var(--text)" onclick="backToForums()">← All forums</button>
+          <div class="card" style="margin-bottom:1rem">
+            <div class="card-body" style="padding:1.1rem 1.25rem">
+              <h3 id="thread-title" style="margin:0 0 .3rem;font-size:1.05rem;font-weight:700;color:var(--text)"></h3>
+              <p id="thread-desc" style="margin:0;font-size:.85rem;color:var(--muted)"></p>
+            </div>
+          </div>
+          <div class="card" id="new-thread-card" style="margin-bottom:1rem">
+            <div class="card-body" style="padding:1rem 1.25rem">
+              <input class="form-control" id="np-subject" placeholder="Subject (optional)" style="margin-bottom:.5rem">
+              <textarea class="form-control" id="np-body" rows="2" placeholder="Start a new discussion…"></textarea>
+              <div id="np-msg" class="alert" style="display:none;margin-top:.5rem"></div>
+              <div style="display:flex;justify-content:flex-end;margin-top:.6rem">
+                <button class="btn btn-primary btn-sm" onclick="postThread()">Post</button>
+              </div>
+            </div>
+          </div>
+          <div id="posts-list"><em style="color:var(--muted)">Loading…</em></div>
+        </div>
+      </div>
+
+      <!-- ATTENDANCE TAB -->
+      <div class="tab-panel" id="tab-attendance">
+        <div style="display:flex;align-items:center;margin-bottom:1rem">
+          <h3 style="margin:0;font-size:1.05rem;font-weight:700;color:var(--text)">Attendance</h3>
+          <button id="add-session-btn" class="btn btn-primary btn-sm" style="margin-left:auto;display:none" onclick="openSession()">+ New session</button>
+        </div>
+        <div id="attendance-body"><em style="color:var(--muted)">Loading…</em></div>
+      </div>
+
+      <!-- PEOPLE TAB -->
+      <div class="tab-panel" id="tab-people">
+        <div id="people-body"><em style="color:var(--muted)">Loading…</em></div>
+      </div>
+    </main>
+  </div>
+
+  <!-- SUBMIT MODAL (student) -->
+  <div class="modal-ov" id="submit-modal">
+    <div class="modal-card">
+      <h3 id="submit-title">Submit Assignment</h3>
+      <div id="submit-desc" style="font-size:.875rem;color:var(--muted);margin-bottom:1rem;line-height:1.6"></div>
+      <div id="submit-feedback" style="display:none"></div>
+      <div id="submit-msg" class="alert" style="display:none"></div>
+      <div id="submit-form">
+        <div class="form-group">
+          <label>Upload file <span style="font-weight:400;font-size:.78rem;color:var(--muted)">(max 20 MB)</span></label>
+          <input class="form-control" type="file" id="submit-file">
+        </div>
+        <div style="display:flex;gap:.65rem;justify-content:flex-end">
+          <button class="btn" onclick="closeModal('submit-modal')">Cancel</button>
+          <button class="btn btn-primary" id="submit-go" onclick="doSubmit()">Submit</button>
+        </div>
+      </div>
+      <div id="submit-done" style="display:none">
+        <div style="text-align:center;padding:.5rem 0 1rem">
+          <div style="font-size:2rem;margin-bottom:.5rem">✓</div>
+          <div style="font-weight:600;color:var(--emerald)">Already submitted</div>
+        </div>
+        <div style="display:flex;justify-content:flex-end">
+          <button class="btn" onclick="closeModal('submit-modal')">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GRADE MODAL (lecturer) -->
+  <div class="modal-ov" id="subs-modal">
+    <div class="modal-card" style="width:560px">
+      <h3 id="subs-title">Submissions</h3>
+      <div id="subs-body"><em style="color:var(--muted)">Loading…</em></div>
+      <div style="display:flex;justify-content:flex-end;margin-top:1rem">
+        <button class="btn" onclick="closeModal('subs-modal')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CREATE ASSIGNMENT MODAL (lecturer) -->
+  <div class="modal-ov" id="create-modal">
+    <div class="modal-card">
+      <h3>Create Assignment</h3>
+      <div id="create-msg" class="alert" style="display:none"></div>
+      <div class="form-group"><label>Title</label><input class="form-control" id="c-title" placeholder="e.g. Week 3 Problem Set"></div>
+      <div class="form-group"><label>Description</label><textarea class="form-control" id="c-desc" rows="3" placeholder="Instructions for students…"></textarea></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem">
+        <div class="form-group"><label>Type</label>
+          <select class="form-control" id="c-type">
+            <option value="upload">File upload</option>
+            <option value="text">Text response</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Max score</label><input class="form-control" id="c-max" type="number" value="100"></div>
+      </div>
+      <div class="form-group"><label>Due date</label><input class="form-control" id="c-due" type="datetime-local"></div>
+      <div style="display:flex;gap:.65rem;justify-content:flex-end">
+        <button class="btn" onclick="closeModal('create-modal')">Cancel</button>
+        <button class="btn btn-primary" onclick="doCreate()">Create</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADD SECTION MODAL (lecturer) -->
+  <div class="modal-ov" id="section-modal">
+    <div class="modal-card">
+      <h3>Add Section</h3>
+      <div id="section-msg" class="alert" style="display:none"></div>
+      <div class="form-group"><label>Title</label><input class="form-control" id="s-title" placeholder="e.g. Week 4 — Kubernetes"></div>
+      <div class="form-group"><label>Description <span style="font-weight:400;font-size:.78rem;color:var(--muted)">(optional)</span></label><textarea class="form-control" id="s-desc" rows="2"></textarea></div>
+      <div style="display:flex;gap:.65rem;justify-content:flex-end">
+        <button class="btn" onclick="closeModal('section-modal')">Cancel</button>
+        <button class="btn btn-primary" onclick="doSection()">Add</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADD MATERIAL MODAL (lecturer) -->
+  <div class="modal-ov" id="material-modal">
+    <div class="modal-card">
+      <h3>Add Material</h3>
+      <div id="material-msg" class="alert" style="display:none"></div>
+      <div class="form-group"><label>Title</label><input class="form-control" id="m-title" placeholder="e.g. Lecture slides"></div>
+      <div class="form-group"><label>Type</label>
+        <select class="form-control" id="m-type" onchange="onMaterialType()">
+          <option value="link">Link (URL)</option>
+          <option value="text">Text note</option>
+          <option value="file">File upload</option>
+        </select>
+      </div>
+      <div class="form-group" id="m-link-group"><label>URL</label><input class="form-control" id="m-url" placeholder="https://…"></div>
+      <div class="form-group" id="m-text-group" style="display:none"><label>Text</label><textarea class="form-control" id="m-text" rows="3"></textarea></div>
+      <div class="form-group" id="m-file-group" style="display:none"><label>File <span style="font-weight:400;font-size:.78rem;color:var(--muted)">(max 20 MB)</span></label><input class="form-control" type="file" id="m-file"></div>
+      <div style="display:flex;gap:.65rem;justify-content:flex-end">
+        <button class="btn" onclick="closeModal('material-modal')">Cancel</button>
+        <button class="btn btn-primary" id="m-go" onclick="doMaterial()">Add</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- NEW FORUM MODAL (lecturer) -->
+  <div class="modal-ov" id="forum-modal">
+    <div class="modal-card">
+      <h3>New Forum</h3>
+      <div id="forum-msg" class="alert" style="display:none"></div>
+      <div class="form-group"><label>Title</label><input class="form-control" id="f-title" placeholder="e.g. Week 5 Q&amp;A"></div>
+      <div class="form-group"><label>Description <span style="font-weight:400;font-size:.78rem;color:var(--muted)">(optional)</span></label><textarea class="form-control" id="f-desc" rows="2"></textarea></div>
+      <div style="display:flex;gap:.65rem;justify-content:flex-end">
+        <button class="btn" onclick="closeModal('forum-modal')">Cancel</button>
+        <button class="btn btn-primary" onclick="doForum()">Create</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- NEW SESSION MODAL (lecturer) -->
+  <div class="modal-ov" id="session-modal">
+    <div class="modal-card">
+      <h3>New Attendance Session</h3>
+      <div id="session-msg" class="alert" style="display:none"></div>
+      <div class="form-group"><label>Title</label><input class="form-control" id="as-title" placeholder="e.g. Lecture 5"></div>
+      <div style="display:grid;grid-template-columns:1fr 120px;gap:.8rem">
+        <div class="form-group"><label>Date &amp; time</label><input class="form-control" id="as-when" type="datetime-local"></div>
+        <div class="form-group"><label>Minutes</label><input class="form-control" id="as-dur" type="number" value="100"></div>
+      </div>
+      <div style="display:flex;gap:.65rem;justify-content:flex-end">
+        <button class="btn" onclick="closeModal('session-modal')">Cancel</button>
+        <button class="btn btn-primary" onclick="doSession()">Create</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script>
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmtDate = d => new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+const params = new URLSearchParams(location.search);
+const COURSE_ID = params.get("id");
+const BANNERS = [
+  'linear-gradient(135deg,#4f46e5,#7c3aed)',
+  'linear-gradient(135deg,#0891b2,#0e7490)',
+  'linear-gradient(135deg,#059669,#047857)',
+  'linear-gradient(135deg,#d97706,#b45309)',
+  'linear-gradient(135deg,#dc2626,#b91c1c)',
+  'linear-gradient(135deg,#7c3aed,#6d28d9)',
+];
+
+let ME = null, COURSE = null, ALL_ASSIGNMENTS = [], ALL_NOTIFS = [], currentAssignmentId = null;
+let canManage = false;
+let currentSectionId = null, currentForumId = null;
+const loaded = { materials:false, discussion:false, attendance:false, people:false };
+
+function closeModal(id) { document.getElementById(id).classList.remove("open"); }
+
+(async () => {
+  if (!COURSE_ID) { location.href = "courses.html"; return; }
+  ME = await initShell();
+  if (!ME) return;
+  if (ME.name) {
+    document.getElementById("user-avatar").textContent = ME.name.charAt(0).toUpperCase();
+    const av = document.getElementById("announce-avatar");
+    if (av) av.textContent = ME.name.charAt(0).toUpperCase();
+  }
+
+  try {
+    COURSE = await api.courses.get(COURSE_ID);
+  } catch {
+    location.href = "courses.html"; return;
+  }
+
+  canManage = (ME.role === "lecturer" || ME.role === "admin");
+
+  // Banner
+  const idx = parseInt(COURSE_ID) % BANNERS.length;
+  document.getElementById("course-banner").style.background = BANNERS[Number.isNaN(idx) ? 0 : idx];
+  document.getElementById("course-title").textContent = COURSE.title;
+  document.getElementById("page-title").textContent = COURSE.title;
+  const metaParts = [];
+  if (COURSE.code) metaParts.push(COURSE.code);
+  if (COURSE.lecturer_name) metaParts.push('Lecturer: ' + COURSE.lecturer_name);
+  if (COURSE.credits) metaParts.push(COURSE.credits + ' credits');
+  document.getElementById("course-meta").textContent = metaParts.join(' · ');
+
+  if (canManage) {
+    document.getElementById("create-btn").style.display = "inline-flex";
+    document.getElementById("add-section-btn").style.display = "inline-flex";
+    document.getElementById("add-forum-btn").style.display = "inline-flex";
+    document.getElementById("add-session-btn").style.display = "inline-flex";
+  }
+  if (ME.role === "lecturer") {
+    document.getElementById("announce-shortcut").style.display = "block";
+  }
+
+  // Stream + assignments load up front; the heavier classroom tabs load lazily.
+  const [allAssign, allNotifs] = await Promise.all([
+    api.assignments.list(),
+    api.notifications.list(),
+  ]);
+
+  ALL_ASSIGNMENTS = allAssign.filter(a => String(a.course_id) === String(COURSE_ID));
+  ALL_NOTIFS      = allNotifs.filter(n => String(n.course_id) === String(COURSE_ID) || n.course_title === COURSE.title);
+
+  renderStream();
+  renderAssignments();
+  renderUpcoming();
+})();
+
+// ---- Tabs ----
+document.querySelectorAll(".stream-tab").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".stream-tab").forEach(b => b.classList.toggle("active", b === btn));
+    document.querySelectorAll(".tab-panel").forEach(p => p.classList.toggle("active", p.id === "tab-" + btn.dataset.tab));
+    const tab = btn.dataset.tab;
+    if (tab === "materials"  && !loaded.materials)  { loaded.materials  = true; loadMaterials(); }
+    if (tab === "discussion" && !loaded.discussion) { loaded.discussion = true; loadForums(); }
+    if (tab === "attendance" && !loaded.attendance) { loaded.attendance = true; loadAttendance(); }
+    if (tab === "people"     && !loaded.people)     { loaded.people     = true; loadPeople(); }
+  });
+});
+
+// ---- Stream ----
+function renderStream() {
+  const el = document.getElementById("stream-list");
+  const items = [
+    ...ALL_NOTIFS.map(n => ({ type: "notif", date: new Date(n.created_at), data: n })),
+    ...ALL_ASSIGNMENTS.map(a => ({ type: "assign", date: new Date(a.created_at || a.due_at), data: a })),
+  ].sort((a, b) => b.date - a.date);
+
+  if (items.length === 0) {
+    el.innerHTML = "<div class='card'><div class='card-body' style='color:var(--muted);font-size:.875rem'>No activity yet in this course.</div></div>";
+    return;
+  }
+
+  el.innerHTML = items.slice(0, 20).map(item => {
+    if (item.type === "notif") {
+      const n = item.data;
+      return `<div class="card" style="margin-bottom:.75rem">
+        <div class="card-body">
+          <div style="display:flex;align-items:center;gap:.65rem;margin-bottom:.6rem">
+            <div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--violet));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:.85rem;flex-shrink:0">${esc((n.sender_name||'?').charAt(0).toUpperCase())}</div>
+            <div>
+              <div style="font-weight:600;font-size:.875rem;color:var(--text)">${esc(n.sender_name||'Instructor')}</div>
+              <div style="font-size:.72rem;color:var(--muted)">${fmtDate(n.created_at)}</div>
+            </div>
+          </div>
+          <div style="font-weight:700;font-size:.95rem;margin-bottom:.4rem;color:var(--text)">${esc(n.title)}</div>
+          <div style="font-size:.875rem;color:var(--muted);line-height:1.6">${esc(n.body)}</div>
+        </div>
+      </div>`;
+    }
+    const a = item.data;
+    const due = new Date(a.due_at);
+    const diff = Math.ceil((due - Date.now()) / 86400000);
+    const cls = diff < 0 ? "badge-danger" : diff <= 3 ? "badge-warning" : "badge-info";
+    const label = diff < 0 ? "Overdue" : diff === 0 ? "Due today" : diff + "d left";
+    return `<div class="card" style="margin-bottom:.75rem">
+      <div class="card-body" style="display:flex;align-items:center;gap:.75rem">
+        <div style="width:38px;height:38px;border-radius:10px;background:var(--primary-bg);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        </div>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:600;font-size:.9rem;color:var(--text)">${esc(a.title)}</div>
+          <div style="font-size:.76rem;color:var(--muted);margin-top:.15rem">Assignment · Due ${due.toLocaleDateString('en-US',{month:'short',day:'numeric'})}</div>
+        </div>
+        <span class="badge ${cls}">${label}</span>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+// ---- Upcoming sidebar ----
+function renderUpcoming() {
+  const el = document.getElementById("upcoming-side");
+  const now = Date.now();
+  const upcoming = ALL_ASSIGNMENTS.filter(a => new Date(a.due_at) > now).slice(0, 5);
+  if (upcoming.length === 0) {
+    el.innerHTML = "<em style='color:var(--muted);font-size:.85rem'>No upcoming deadlines</em>";
+    return;
+  }
+  el.innerHTML = upcoming.map(a => {
+    const due = new Date(a.due_at);
+    const diff = Math.ceil((due - now) / 86400000);
+    const cls = diff <= 2 ? "badge-danger" : diff <= 5 ? "badge-warning" : "badge-info";
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:.6rem 0;border-bottom:1px solid var(--border)">
+      <div style="font-size:.82rem;font-weight:500;color:var(--text);flex:1;min-width:0;margin-right:.5rem">${esc(a.title)}</div>
+      <span class="badge ${cls}">${diff}d</span>
+    </div>`;
+  }).join("");
+}
+
+// ---- Assignments tab ----
+function renderAssignments() {
+  const el = document.getElementById("assign-list");
+  if (ALL_ASSIGNMENTS.length === 0) {
+    el.innerHTML = "<div style='padding:1.25rem;color:var(--muted);font-size:.875rem'>No assignments yet.</div>";
+    return;
+  }
+  const now = Date.now();
+  el.innerHTML = ALL_ASSIGNMENTS.map(a => {
+    const due = new Date(a.due_at);
+    const diff = Math.ceil((due - now) / 86400000);
+    const overdue = due < now;
+    const cls = overdue ? "badge-danger" : diff <= 3 ? "badge-warning" : "badge-success";
+    const label = overdue ? "Overdue" : diff === 0 ? "Due today" : diff + "d left";
+    let action = "", statusBadge = "";
+    if (canManage) {
+      const count = a.submission_count || 0;
+      statusBadge = `<span class="badge badge-info" style="margin-right:.5rem">${count} submitted</span>`;
+      action = `<button class="btn btn-sm" onclick="openSubs('${a.id}','${esc(a.title)}')" style="background:var(--bg);border:1px solid var(--border);color:var(--text)">Grade</button>`;
+    } else {
+      if (a.my_status === "graded")    statusBadge = `<span class="badge badge-success" style="margin-right:.5rem">Graded: ${a.my_grade ?? '—'}</span>`;
+      else if (a.my_status === "submitted") statusBadge = `<span class="badge badge-info" style="margin-right:.5rem">Submitted</span>`;
+      if (!overdue) action = `<button class="btn btn-primary btn-sm" onclick="openSubmit('${a.id}','${esc(a.title)}')">View &amp; Submit</button>`;
+    }
+    return `<div class="assign-row">
+      <div class="assign-icon" style="background:var(--primary-bg)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      </div>
+      <div class="assign-info">
+        <div class="assign-title">${esc(a.title)}</div>
+        <div class="assign-meta">Due ${due.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})}${a.max_score ? ' · ' + a.max_score + ' pts' : ''}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:.4rem">
+        ${statusBadge}<span class="badge ${cls}">${label}</span>${action ? '<span style="margin-left:.4rem">' + action + '</span>' : ''}
+      </div>
+    </div>`;
+  }).join("");
+}
+
+// =========================================================================
+// MATERIALS
+// =========================================================================
+const MAT_ICONS = {
+  link: '<svg viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:17px;height:17px"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>',
+  file: '<svg viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:17px;height:17px"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>',
+  text: '<svg viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:17px;height:17px"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="14" y2="18"/></svg>',
+};
+
+async function loadMaterials() {
+  const el = document.getElementById("materials-list");
+  try {
+    const secs = await api.courses.sections(COURSE_ID);
+    renderMaterials(secs);
+  } catch (e) {
+    el.innerHTML = `<div class="card"><div class="card-body" style="color:var(--rose);font-size:.875rem">${esc(e.message)}</div></div>`;
+  }
+}
+
+function renderMaterials(secs) {
+  const el = document.getElementById("materials-list");
+  if (!secs || secs.length === 0) {
+    el.innerHTML = "<div class='card'><div class='card-body' style='color:var(--muted);font-size:.875rem'>No materials have been added yet.</div></div>";
+    return;
+  }
+  el.innerHTML = secs.map(s => {
+    const mats = (s.materials || []).map(m => {
+      let right = "";
+      if (m.type === "link") {
+        right = `<a href="${esc(m.content)}" target="_blank" rel="noopener" class="btn btn-sm" style="background:var(--bg);border:1px solid var(--border);color:var(--text)">Open</a>`;
+      } else if (m.type === "file") {
+        const kb = m.file_size ? ' · ' + Math.max(1, Math.round(m.file_size/1024)) + ' KB' : '';
+        right = `<button class="btn btn-sm" onclick="downloadMaterial('${m.id}')" style="background:var(--bg);border:1px solid var(--border);color:var(--text)">Download${kb}</button>`;
+      } else {
+        right = `<span class="badge badge-info">Note</span>`;
+      }
+      const sub = m.type === "text" ? `<div class="assign-meta">${esc(m.content)}</div>`
+                : m.type === "link" ? `<div class="assign-meta">${esc(m.content)}</div>`
+                : `<div class="assign-meta">Attached file</div>`;
+      return `<div class="mat-row">
+        <div class="mat-ico">${MAT_ICONS[m.type] || MAT_ICONS.file}</div>
+        <div class="assign-info"><div class="assign-title">${esc(m.title)}</div>${sub}</div>
+        <div>${right}</div>
+      </div>`;
+    }).join("") || "<div style='padding:.75rem 1.25rem;color:var(--muted);font-size:.85rem'>No items in this section.</div>";
+
+    const addBtn = canManage
+      ? `<button class="btn btn-sm" style="margin-left:auto;background:var(--bg);border:1px solid var(--border);color:var(--text)" onclick="openMaterial('${s.id}')">+ Add material</button>`
+      : "";
+    return `<div class="card" style="margin-bottom:1rem">
+      <div class="card-header">${esc(s.title)}${addBtn}</div>
+      <div>${mats}</div>
+    </div>`;
+  }).join("");
+}
+
+// Open the download tab synchronously (so it isn't blocked as a popup), then
+// point it at the freshly minted short-lived SAS URL once it arrives.
+async function downloadMaterial(materialId) {
+  const w = window.open("", "_blank");
+  try {
+    const { url } = await api.courses.materialUrl(COURSE_ID, materialId);
+    if (w) w.location = url; else window.open(url, "_blank", "noopener");
+  } catch (e) { if (w) w.close(); alert(e.message); }
+}
+
+function openSection() {
+  document.getElementById("section-msg").style.display = "none";
+  document.getElementById("s-title").value = "";
+  document.getElementById("s-desc").value = "";
+  document.getElementById("section-modal").classList.add("open");
+}
+async function doSection() {
+  const msg = document.getElementById("section-msg");
+  const title = document.getElementById("s-title").value.trim();
+  if (!title) { msg.className="alert alert-danger"; msg.textContent="Title is required"; msg.style.display="block"; return; }
+  try {
+    await api.courses.createSection(COURSE_ID, { title, description: document.getElementById("s-desc").value.trim() });
+    closeModal("section-modal");
+    loadMaterials();
+  } catch(e) { msg.className="alert alert-danger"; msg.textContent=e.message; msg.style.display="block"; }
+}
+
+function openMaterial(sectionId) {
+  currentSectionId = sectionId;
+  document.getElementById("material-msg").style.display = "none";
+  document.getElementById("m-title").value = "";
+  document.getElementById("m-url").value = "";
+  document.getElementById("m-text").value = "";
+  document.getElementById("m-file").value = "";
+  document.getElementById("m-type").value = "link";
+  onMaterialType();
+  document.getElementById("m-go").disabled = false;
+  document.getElementById("material-modal").classList.add("open");
+}
+function onMaterialType() {
+  const t = document.getElementById("m-type").value;
+  document.getElementById("m-link-group").style.display = t === "link" ? "block" : "none";
+  document.getElementById("m-text-group").style.display = t === "text" ? "block" : "none";
+  document.getElementById("m-file-group").style.display = t === "file" ? "block" : "none";
+}
+async function doMaterial() {
+  const msg = document.getElementById("material-msg");
+  const title = document.getElementById("m-title").value.trim();
+  const type = document.getElementById("m-type").value;
+  if (!title) { msg.className="alert alert-danger"; msg.textContent="Title is required"; msg.style.display="block"; return; }
+
+  const fd = new FormData();
+  fd.append("title", title);
+  fd.append("type", type);
+  if (type === "link") {
+    const url = document.getElementById("m-url").value.trim();
+    if (!url) { msg.className="alert alert-danger"; msg.textContent="A URL is required"; msg.style.display="block"; return; }
+    fd.append("content", url);
+  } else if (type === "text") {
+    const txt = document.getElementById("m-text").value.trim();
+    if (!txt) { msg.className="alert alert-danger"; msg.textContent="Text is required"; msg.style.display="block"; return; }
+    fd.append("content", txt);
+  } else {
+    const f = document.getElementById("m-file").files[0];
+    if (!f) { msg.className="alert alert-danger"; msg.textContent="Please choose a file"; msg.style.display="block"; return; }
+    fd.append("file", f);
+  }
+  document.getElementById("m-go").disabled = true;
+  try {
+    await api.courses.addMaterial(COURSE_ID, currentSectionId, fd);
+    closeModal("material-modal");
+    loadMaterials();
+  } catch(e) {
+    msg.className="alert alert-danger"; msg.textContent=e.message; msg.style.display="block";
+    document.getElementById("m-go").disabled = false;
+  }
+}
+
+// =========================================================================
+// DISCUSSION
+// =========================================================================
+async function loadForums() {
+  const el = document.getElementById("forums-list");
+  try {
+    const forums = await api.courses.forums(COURSE_ID);
+    if (!forums || forums.length === 0) {
+      el.innerHTML = "<div class='card'><div class='card-body' style='color:var(--muted);font-size:.875rem'>No discussion forums yet.</div></div>";
+      return;
+    }
+    el.innerHTML = forums.map(f => `
+      <div class="card" style="margin-bottom:.75rem;cursor:pointer" onclick="openForumThread('${f.id}')">
+        <div class="card-body" style="display:flex;align-items:center;gap:.85rem">
+          <div class="mat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:17px;height:17px"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
+          <div class="assign-info">
+            <div class="assign-title">${esc(f.title)} ${f.is_locked ? '<span class="badge badge-warning" style="margin-left:.3rem">Locked</span>' : ''}</div>
+            <div class="assign-meta">${esc(f.description||'')}</div>
+          </div>
+          <div style="text-align:right">
+            <div class="badge badge-info">${f.post_count||0} posts</div>
+            ${f.last_post_at ? `<div class="assign-meta" style="margin-top:.25rem">${fmtDate(f.last_post_at)}</div>` : ''}
+          </div>
+        </div>
+      </div>`).join("");
+  } catch (e) {
+    el.innerHTML = `<div class="card"><div class="card-body" style="color:var(--rose);font-size:.875rem">${esc(e.message)}</div></div>`;
+  }
+}
+
+function openForum() {
+  document.getElementById("forum-msg").style.display = "none";
+  document.getElementById("f-title").value = "";
+  document.getElementById("f-desc").value = "";
+  document.getElementById("forum-modal").classList.add("open");
+}
+async function doForum() {
+  const msg = document.getElementById("forum-msg");
+  const title = document.getElementById("f-title").value.trim();
+  if (!title) { msg.className="alert alert-danger"; msg.textContent="Title is required"; msg.style.display="block"; return; }
+  try {
+    await api.courses.createForum(COURSE_ID, { title, description: document.getElementById("f-desc").value.trim() });
+    closeModal("forum-modal");
+    loadForums();
+  } catch(e) { msg.className="alert alert-danger"; msg.textContent=e.message; msg.style.display="block"; }
+}
+
+function backToForums() {
+  document.getElementById("forum-thread-view").style.display = "none";
+  document.getElementById("forum-list-view").style.display = "block";
+  currentForumId = null;
+  loadForums();
+}
+
+async function openForumThread(forumId) {
+  currentForumId = forumId;
+  document.getElementById("forum-list-view").style.display = "none";
+  document.getElementById("forum-thread-view").style.display = "block";
+  document.getElementById("posts-list").innerHTML = "<em style='color:var(--muted)'>Loading…</em>";
+  document.getElementById("np-subject").value = "";
+  document.getElementById("np-body").value = "";
+  document.getElementById("np-msg").style.display = "none";
+  try {
+    const { forum, posts } = await api.courses.posts(COURSE_ID, forumId);
+    document.getElementById("thread-title").textContent = forum_titleOf(forum);
+    document.getElementById("thread-desc").textContent = "";
+    const locked = forum.is_locked && !canManage;
+    document.getElementById("new-thread-card").style.display = locked ? "none" : "block";
+    renderPosts(posts, locked);
+  } catch (e) {
+    document.getElementById("posts-list").innerHTML = `<em style='color:var(--rose)'>${esc(e.message)}</em>`;
+  }
+}
+function forum_titleOf(f){ return f && f.title ? f.title : "Discussion"; }
+
+function renderPosts(posts, locked) {
+  const el = document.getElementById("posts-list");
+  const roots = posts.filter(p => !p.parent_id);
+  const replies = posts.filter(p => p.parent_id);
+  if (roots.length === 0) {
+    el.innerHTML = "<div style='color:var(--muted);font-size:.875rem;padding:.5rem'>No posts yet. Be the first to start a discussion.</div>";
+    return;
+  }
+  const replyBox = (pid) => locked ? "" :
+    `<div style="margin-top:.5rem"><textarea class="form-control" id="rb-${pid}" rows="1" placeholder="Reply…" style="font-size:.85rem"></textarea>
+     <div style="display:flex;justify-content:flex-end;margin-top:.35rem"><button class="btn btn-sm btn-primary" onclick="postReply('${pid}')">Reply</button></div></div>`;
+  el.innerHTML = roots.map(p => {
+    const kids = replies.filter(r => r.parent_id === p.id);
+    const kidHtml = kids.map(k => postCard(k, true)).join("");
+    return `<div class="post">
+      ${postInner(p)}
+      ${kidHtml}
+      ${replyBox(p.id)}
+    </div>`;
+  }).join("");
+}
+function postInner(p) {
+  return `<div class="post-head">
+      <div class="post-av">${esc((p.author_name||'?').charAt(0).toUpperCase())}</div>
+      <div><div style="font-weight:600;font-size:.85rem;color:var(--text)">${esc(p.author_name)} ${p.author_role==='lecturer'?'<span class="badge badge-info" style="margin-left:.2rem">Lecturer</span>':''}</div>
+      <div style="font-size:.72rem;color:var(--muted)">${fmtDate(p.created_at)}</div></div>
+    </div>
+    ${p.subject ? `<div style="font-weight:700;font-size:.9rem;margin-bottom:.25rem;color:var(--text)">${esc(p.subject)}</div>` : ''}
+    <div style="font-size:.875rem;color:var(--text);line-height:1.6">${esc(p.body)}</div>`;
+}
+function postCard(p) {
+  return `<div class="post post-reply" style="margin-top:.6rem">${postInner(p)}</div>`;
+}
+
+async function postThread() {
+  const msg = document.getElementById("np-msg");
+  const body = document.getElementById("np-body").value.trim();
+  const subject = document.getElementById("np-subject").value.trim();
+  if (!body) { msg.className="alert alert-danger"; msg.textContent="Write a message first"; msg.style.display="block"; return; }
+  try {
+    await api.courses.createPost(COURSE_ID, currentForumId, { subject, body });
+    openForumThread(currentForumId);
+  } catch(e) { msg.className="alert alert-danger"; msg.textContent=e.message; msg.style.display="block"; }
+}
+async function postReply(parentId) {
+  const ta = document.getElementById("rb-"+parentId);
+  const body = ta.value.trim();
+  if (!body) { ta.focus(); return; }
+  try {
+    await api.courses.createPost(COURSE_ID, currentForumId, { body, parent_id: parentId });
+    openForumThread(currentForumId);
+  } catch(e) { alert(e.message); }
+}
+
+// =========================================================================
+// ATTENDANCE
+// =========================================================================
+const ATT_STATUSES = ["present","late","excused","absent"];
+const ATT_BADGE = { present:"badge-success", late:"badge-warning", excused:"badge-info", absent:"badge-danger" };
+
+async function loadAttendance() {
+  const el = document.getElementById("attendance-body");
+  try {
+    const data = await api.courses.attendance(COURSE_ID);
+    if (data.mode === "manage") renderAttendanceManage(data);
+    else renderAttendanceMine(data);
+  } catch (e) {
+    el.innerHTML = `<div class="card"><div class="card-body" style="color:var(--rose);font-size:.875rem">${esc(e.message)}</div></div>`;
+  }
+}
+
+function renderAttendanceManage(data) {
+  const el = document.getElementById("attendance-body");
+  if (!data.sessions.length) {
+    el.innerHTML = "<div class='card'><div class='card-body' style='color:var(--muted);font-size:.875rem'>No sessions yet. Create one to start taking attendance.</div></div>";
+    return;
+  }
+  const recMap = {}; // sessionId -> studentId -> status
+  data.records.forEach(r => { (recMap[r.session_id] = recMap[r.session_id] || {})[r.student_id] = r.status; });
+
+  el.innerHTML = data.sessions.map(s => {
+    const rows = data.students.map(st => {
+      const cur = (recMap[s.id] && recMap[s.id][st.id]) || "absent";
+      const opts = ATT_STATUSES.map(v => `<option value="${v}"${v===cur?' selected':''}>${v[0].toUpperCase()+v.slice(1)}</option>`).join("");
+      return `<div class="att-grid">
+        <div style="font-size:.875rem;color:var(--text)">${esc(st.name)}</div>
+        <select class="form-control" style="width:130px;padding:.35rem .5rem" data-ses="${s.id}" data-stu="${st.id}">${opts}</select>
+      </div>`;
+    }).join("");
+    return `<div class="card" style="margin-bottom:1rem">
+      <div class="card-header">${esc(s.title)} <span style="font-weight:400;color:var(--muted);font-size:.8rem;margin-left:.5rem">${new Date(s.held_at).toLocaleString()}</span>
+        <button class="btn btn-sm btn-primary" style="margin-left:auto" onclick="saveAttendance('${s.id}')">Save</button></div>
+      <div class="card-body" style="padding:.4rem 1.25rem">${rows || "<em style='color:var(--muted);font-size:.85rem'>No students enrolled.</em>"}</div>
+      <div id="att-msg-${s.id}" style="padding:0 1.25rem .8rem;font-size:.8rem"></div>
+    </div>`;
+  }).join("");
+}
+async function saveAttendance(sessionId) {
+  const selects = document.querySelectorAll(`select[data-ses="${sessionId}"]`);
+  const records = Array.from(selects).map(sel => ({ student_id: sel.dataset.stu, status: sel.value }));
+  const m = document.getElementById("att-msg-"+sessionId);
+  m.textContent = "Saving…"; m.style.color = "var(--muted)";
+  try {
+    await api.courses.markAttendance(COURSE_ID, sessionId, records);
+    m.textContent = "Saved ✓"; m.style.color = "var(--emerald)";
+  } catch(e) { m.textContent = e.message; m.style.color = "var(--rose)"; }
+}
+
+function renderAttendanceMine(data) {
+  const el = document.getElementById("attendance-body");
+  const sum = data.summary;
+  const pctColor = sum.percent >= 75 ? "var(--emerald)" : sum.percent >= 50 ? "var(--amber, #d97706)" : "var(--rose)";
+  const summaryCard = `<div class="card" style="margin-bottom:1rem"><div class="card-body" style="display:flex;align-items:center;gap:1.25rem">
+      <div style="font-size:2rem;font-weight:800;color:${pctColor}">${sum.percent}%</div>
+      <div style="font-size:.875rem;color:var(--muted)">Attendance rate<br>${sum.attended} of ${sum.total} sessions attended</div>
+    </div></div>`;
+  if (!data.sessions.length) {
+    el.innerHTML = summaryCard + "<div class='card'><div class='card-body' style='color:var(--muted);font-size:.875rem'>No sessions recorded yet.</div></div>";
+    return;
+  }
+  const rows = data.sessions.map(s => {
+    const status = s.status || "—";
+    const badge = s.status ? `<span class="badge ${ATT_BADGE[s.status]||'badge-info'}">${status}</span>` : `<span class="badge" style="background:var(--bg);color:var(--muted)">Not recorded</span>`;
+    return `<div class="att-grid" style="padding:.7rem 1.25rem">
+      <div><div style="font-size:.875rem;font-weight:500;color:var(--text)">${esc(s.title)}</div>
+        <div class="assign-meta">${new Date(s.held_at).toLocaleString()}</div></div>
+      ${badge}
+    </div>`;
+  }).join("");
+  el.innerHTML = summaryCard + `<div class="card"><div class="card-header">Session History</div><div>${rows}</div></div>`;
+}
+
+function openSession() {
+  document.getElementById("session-msg").style.display = "none";
+  document.getElementById("as-title").value = "";
+  document.getElementById("as-when").value = "";
+  document.getElementById("as-dur").value = 100;
+  document.getElementById("session-modal").classList.add("open");
+}
+async function doSession() {
+  const msg = document.getElementById("session-msg");
+  const held_at = document.getElementById("as-when").value;
+  if (!held_at) { msg.className="alert alert-danger"; msg.textContent="Date & time is required"; msg.style.display="block"; return; }
+  try {
+    await api.courses.createSession(COURSE_ID, {
+      title: document.getElementById("as-title").value.trim(),
+      held_at: held_at.replace("T"," ") + ":00",
+      duration_min: Number(document.getElementById("as-dur").value) || 100,
+    });
+    closeModal("session-modal");
+    loadAttendance();
+  } catch(e) { msg.className="alert alert-danger"; msg.textContent=e.message; msg.style.display="block"; }
+}
+
+// =========================================================================
+// PEOPLE
+// =========================================================================
+async function loadPeople() {
+  const el = document.getElementById("people-body");
+  try {
+    const { lecturer, students } = await api.courses.people(COURSE_ID);
+    const person = (p, role) => `<div class="person-row">
+        <div class="person-avatar">${esc((p.name||'?').charAt(0).toUpperCase())}</div>
+        <div class="assign-info"><div class="assign-title">${esc(p.name)}</div><div class="assign-meta">${esc(p.email||'')}</div></div>
+        ${role ? `<span class="badge badge-info">${role}</span>` : ''}
+      </div>`;
+    const lecHtml = lecturer ? person(lecturer, "Lecturer") : "<div style='padding:.7rem 1.25rem;color:var(--muted);font-size:.85rem'>No lecturer assigned.</div>";
+    const studHtml = (students && students.length)
+      ? students.map(s => person(s, s.status && s.status !== 'active' ? s.status : '')).join("")
+      : "<div style='padding:.7rem 1.25rem;color:var(--muted);font-size:.85rem'>No students enrolled.</div>";
+    el.innerHTML = `
+      <div class="card" style="margin-bottom:1rem"><div class="card-header">Instructor</div><div>${lecHtml}</div></div>
+      <div class="card"><div class="card-header">Students (${students ? students.length : 0})</div><div>${studHtml}</div></div>`;
+  } catch (e) {
+    el.innerHTML = `<div class="card"><div class="card-body" style="color:var(--rose);font-size:.875rem">${esc(e.message)}</div></div>`;
+  }
+}
+
+// =========================================================================
+// SUBMIT (student) — unchanged behaviour
+// =========================================================================
+async function openSubmit(id, title) {
+  currentAssignmentId = id;
+  document.getElementById("submit-title").textContent = title;
+  document.getElementById("submit-msg").style.display = "none";
+  document.getElementById("submit-file").value = "";
+  document.getElementById("submit-go").disabled = false;
+  document.getElementById("submit-feedback").style.display = "none";
+  document.getElementById("submit-form").style.display = "block";
+  document.getElementById("submit-done").style.display = "none";
+
+  const a = ALL_ASSIGNMENTS.find(x => String(x.id) === String(id));
+  document.getElementById("submit-desc").innerHTML = a && a.description
+    ? esc(a.description) : "<em style='color:var(--muted)'>No description provided.</em>";
+
+  if (a && a.my_status === "graded" && a.feedback) {
+    const fb = document.getElementById("submit-feedback");
+    fb.style.display = "block";
+    fb.className = "feedback-box";
+    fb.innerHTML = "<strong>Lecturer feedback:</strong> " + esc(a.feedback);
+  }
+  if (a && (a.my_status === "submitted" || a.my_status === "graded")) {
+    document.getElementById("submit-form").style.display = "none";
+    document.getElementById("submit-done").style.display = "block";
+  }
+  document.getElementById("submit-modal").classList.add("open");
+}
+
+async function doSubmit() {
+  const f = document.getElementById("submit-file"), msg = document.getElementById("submit-msg");
+  if (!f.files[0]) { msg.className="alert alert-danger"; msg.textContent="Please choose a file."; msg.style.display="block"; return; }
+  const fd = new FormData(); fd.append("file", f.files[0]);
+  document.getElementById("submit-go").disabled = true;
+  try {
+    await api.assignments.submit(currentAssignmentId, fd);
+    msg.className="alert alert-success"; msg.textContent="Submitted successfully!"; msg.style.display="block";
+    const allAssign = await api.assignments.list();
+    ALL_ASSIGNMENTS = allAssign.filter(a => String(a.course_id) === String(COURSE_ID));
+    renderAssignments();
+  } catch(e) {
+    msg.className="alert alert-danger"; msg.textContent=e.message; msg.style.display="block";
+    document.getElementById("submit-go").disabled = false;
+  }
+}
+
+// ---- Grade (lecturer) ----
+async function openSubs(id, title) {
+  currentAssignmentId = id;
+  document.getElementById("subs-title").textContent = "Submissions: " + title;
+  document.getElementById("subs-body").innerHTML = "<em style='color:var(--muted)'>Loading…</em>";
+  document.getElementById("subs-modal").classList.add("open");
+  try {
+    const subs = await api.assignments.submissions(id);
+    if (subs.length === 0) {
+      document.getElementById("subs-body").innerHTML = "<em style='color:var(--muted)'>No submissions yet</em>";
+      return;
+    }
+    document.getElementById("subs-body").innerHTML = subs.map(s => `
+      <div class="sub-row">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem">
+          <div>
+            <div style="font-weight:600;color:var(--text);font-size:.9rem">${esc(s.student_name)}</div>
+            <div style="font-size:.75rem;color:var(--muted)">${esc(s.student_email)} · ${new Date(s.submitted_at).toLocaleString()}</div>
+          </div>
+          <span class="badge ${s.status==='graded'?'badge-success':'badge-info'}">${s.status}</span>
+        </div>
+        ${s.file_path ? `<div style="margin-bottom:.6rem"><button class="btn btn-sm" onclick="downloadSubmission('${s.student_id}')" style="background:var(--bg);border:1px solid var(--border);color:var(--text)">⬇ Download file</button></div>` : ''}
+        <div style="display:grid;grid-template-columns:90px 1fr auto;gap:.5rem;align-items:center">
+          <input class="form-control" type="number" placeholder="Score" id="sc-${s.student_id}" value="${s.score ?? ''}">
+          <input class="form-control" placeholder="Feedback…" id="fb-${s.student_id}" value="${esc(s.feedback||'')}">
+          <button class="btn btn-primary btn-sm" onclick="doGrade('${s.student_id}')">Save</button>
+        </div>
+        <span id="gmsg-${s.student_id}" style="font-size:.78rem;display:block;margin-top:.3rem"></span>
+      </div>`).join("");
+  } catch(e) {
+    document.getElementById("subs-body").innerHTML = `<em style='color:var(--rose)'>${esc(e.message)}</em>`;
+  }
+}
+
+async function downloadSubmission(studentId) {
+  const w = window.open("", "_blank");
+  try {
+    const { url } = await api.assignments.fileUrl(currentAssignmentId, studentId);
+    if (w) w.location = url; else window.open(url, "_blank", "noopener");
+  } catch (e) { if (w) w.close(); alert(e.message); }
+}
+
+async function doGrade(studentId) {
+  const score = document.getElementById("sc-"+studentId).value;
+  const feedback = document.getElementById("fb-"+studentId).value;
+  const m = document.getElementById("gmsg-"+studentId);
+  if (score === "") { m.textContent="Enter a score"; m.style.color="var(--rose)"; return; }
+  try {
+    await api.assignments.grade(currentAssignmentId, studentId, Number(score), feedback);
+    m.textContent="Saved ✓"; m.style.color="var(--emerald)";
+  } catch(e) { m.textContent=e.message; m.style.color="var(--rose)"; }
+}
+
+// ---- Create assignment (lecturer) ----
+function openCreate() {
+  document.getElementById("create-msg").style.display = "none";
+  ["c-title","c-desc","c-due"].forEach(id => document.getElementById(id).value = "");
+  document.getElementById("c-max").value = 100;
+  document.getElementById("create-modal").classList.add("open");
+}
+
+async function doCreate() {
+  const msg = document.getElementById("create-msg");
+  const body = {
+    course_id: COURSE_ID,
+    title: document.getElementById("c-title").value.trim(),
+    description: document.getElementById("c-desc").value.trim(),
+    type: document.getElementById("c-type").value,
+    max_score: Number(document.getElementById("c-max").value) || 100,
+    due_at: document.getElementById("c-due").value,
+  };
+  if (!body.title || !body.due_at) {
+    msg.className="alert alert-danger"; msg.textContent="Title and due date are required"; msg.style.display="block"; return;
+  }
+  try {
+    await api.assignments.create(body);
+    closeModal("create-modal");
+    const allAssign = await api.assignments.list();
+    ALL_ASSIGNMENTS = allAssign.filter(a => String(a.course_id) === String(COURSE_ID));
+    renderStream(); renderAssignments(); renderUpcoming();
+  } catch(e) { msg.className="alert alert-danger"; msg.textContent=e.message; msg.style.display="block"; }
+}
+</script>
+</body>
+</html>
