@@ -1,8 +1,5 @@
 # Moodle Web — On-Premise (Docker) Deployment Guide
 
-> Cloud Computing course project · UGM 2026  
-> Supervisor: Dr. Lukman Heryawan, S.T., M.T.
-
 > For cloud deployment, see [README-CLOUD.md](README-CLOUD.md).
 
 ## Prerequisites
@@ -99,29 +96,6 @@ All accounts use password: **`password123`**
 
 ---
 
-## 6. Useful commands
-
-```bash
-# View live logs
-docker compose logs -f
-
-# View only backend logs
-docker compose logs -f backend
-
-# Stop everything
-docker compose down
-
-# Stop and DELETE all data (wipes the database volume)
-docker compose down -v
-
-# Rebuild after code changes
-docker compose up --build -d
-
-# Open a MySQL shell
-docker exec -it moodle_db mysql -u moodle_user -pmoodle_pass123 moodle_web
-```
-
----
 
 ## 7. Project structure
 
@@ -175,20 +149,3 @@ All routes are prefixed `/api/v1/`. Protected routes require `Authorization: Bea
 
 ---
 
-## 9. Troubleshooting
-
-**Backend keeps restarting?**  
-The backend waits for MySQL to be healthy before starting. If MySQL is slow (first run), wait 30–60 s and check again:
-```bash
-docker compose logs backend
-```
-
-**Port 80 already in use?**  
-Edit `docker-compose.yml`, change `"80:80"` to e.g. `"8080:80"`, then access at `http://localhost:8080`.
-
-**Database changes not applied?**  
-The MySQL init scripts only run on the very first start (when the volume is empty). To reset:
-```bash
-docker compose down -v
-docker compose up --build -d
-```
